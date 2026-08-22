@@ -335,16 +335,17 @@
   </div>
 
   <script>
-    // Same Firebase project as the court schedule — one console to manage, and
-    // phone sign-in is already configured there. This app's data lives under
-    // its own stringing_* collections and never touches the schedule's.
+    // Its own Firebase project, deliberately. A project has one Firestore rules
+    // file covering everything in it, so sharing the court schedule's project
+    // would have meant editing the rules that gate the schedule — the one
+    // thing this was not to touch.
     const FIREBASE_CONFIG = {
-      apiKey: "AIzaSyD4aAi44uc0WFlP6LTf8NTtIcDh7vJJWkI",
-      authDomain: "lagcc-court-schedule.firebaseapp.com",
-      projectId: "lagcc-court-schedule",
-      storageBucket: "lagcc-court-schedule.firebasestorage.app",
-      messagingSenderId: "813946500866",
-      appId: "1:813946500866:web:c23512a4932263eec6b41b"
+      apiKey: "AIzaSyDQuhXFog3QLXcQqz3MSgdTRabKkwt2MtI",
+      authDomain: "racket-stringing-log.firebaseapp.com",
+      projectId: "racket-stringing-log",
+      storageBucket: "racket-stringing-log.firebasestorage.app",
+      messagingSenderId: "1080867982739",
+      appId: "1:1080867982739:web:648b2a56d2b0f445a12c66"
     };
     const STAFF = "stringing_staff";
     const MEMBERS = "stringing_members";
