@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LAGCC Racket Stringing</title>
+  <style>
+    :root {
+      --bg: #f3eee4;
+      --surface: #fffdf9;
+      --text: #4b3528;
+      --muted: #756659;
+      --border: #cdbfae;
+      --line: #d9c99c;
+      --waiting: #8a7a5c;
+      --bench: #9a6b3f;
+      --ready: #4f7350;
+      --danger: #b3261e;
+      --tint: #f9f5ed;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-text-size-adjust: 100%;
+    }
+    .page { max-width: 880px; margin: 0 auto; padding: 30px 20px 60px; }
+
+    h1 { margin: 0 0 4px; font-size: 30px; font-weight: 800; text-align: center; }
+    .sub { margin: 0 0 20px; text-align: center; color: var(--muted); font-size: 14px; font-weight: 600; }
+
+    /* ---------- session pill ---------- */
+    .session {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      font-weight: 650;
+      color: var(--muted);
+    }
+    .session.show { display: flex; }
+    .session .who { color: var(--text); }
+    .linkish {
+      border: 0; background: none; padding: 0;
+      font: inherit; color: var(--muted);
+      text-decoration: underline; cursor: pointer;
+    }
+
+    /* ---------- view switch ---------- */
+    .switch { display: none; gap: 6px; justify-content: center; margin-bottom: 22px; }
+    .switch.show { display: flex; }
+    .switch button {
+      height: 38px; padding: 0 16px;
+      border: 1px solid var(--border); border-radius: 9px;
+      background: var(--surface); color: var(--text);
+      font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+    .switch button.active { background: #e8d8c4; }
+
+    /* ---------- cards ---------- */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 6px 18px rgba(75,53,40,.06);
+    }
+    .card h2 { margin: 0 0 14px; font-size: 17px; font-weight: 750; }
+
+    label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 650; }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 15px;   /* 16px-ish keeps iOS from zooming the page on focus */
+      background: #fff;
+      color: var(--text);
+    }
+    textarea { min-height: 64px; resize: vertical; }
+    .field { margin-bottom: 13px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+
+    button.primary {
+      width: 100%; height: 46px;
+      border: 0; border-radius: 9px;
+      background: var(--text); color: #fff;
+      font: inherit; font-size: 15px; font-weight: 750; cursor: pointer;
+    }
+    button.primary:disabled { opacity: .5; cursor: default; }
+    button.secondary {
+      height: 40px; padding: 0 14px;
+      border: 1px solid var(--border); border-radius: 8px;
+      background: var(--surface); color: var(--text);
+      font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+    button.go { background: var(--ready); border-color: var(--ready); color: #fff; }
+    button.warn { color: var(--danger); }
+
+    .msg { margin-top: 10px; font-size: 13px; font-weight: 650; }
+    .msg.err { color: var(--danger); }
+    .msg.ok { color: var(--ready); }
+
+    /* ---------- order rows ---------- */
+    .orders { margin-top: 4px; }
+    .order {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 11px;
+      background: var(--tint);
+    }
+    .order-top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 7px; }
+    .order-racket { font-size: 15px; font-weight: 750; }
+    .badge {
+      font-size: 11px; font-weight: 750; letter-spacing: .03em;
+      text-transform: uppercase;
+      padding: 3px 8px; border-radius: 20px;
+      color: #fff; white-space: nowrap;
+    }
+    .badge.requested { background: var(--waiting); }
+    .badge.in_progress { background: var(--bench); }
+    .badge.finished { background: var(--ready); }
+    .order-line { font-size: 13.5px; color: var(--muted); margin-top: 3px; }
+    .order-line b { color: var(--text); font-weight: 700; }
+    .order-note {
+      margin-top: 8px; padding: 8px 10px;
+      background: #fff; border: 1px solid var(--border); border-radius: 7px;
+      font-size: 13px;
+    }
+    .order-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+    .empty { padding: 18px 2px; color: var(--muted); font-size: 14px; font-weight: 600; text-align: center; }
+    .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .filters button {
+      height: 34px; padding: 0 12px;
+      border: 1px solid var(--border); border-radius: 8px;
+      background: var(--surface); color: var(--text);
+      font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer;
+    }
+    .filters button.active { background: #e8d8c4; }
+    .count { color: var(--muted); font-weight: 650; }
+
+    details.adder summary {
+      cursor: pointer; font-size: 14px; font-weight: 700;
+      padding: 4px 0; list-style: none;
+    }
+    details.adder summary::-webkit-details-marker { display: none; }
+    details.adder summary::before { content: "+ "; }
+    details.adder[open] summary::before { content: "− "; }
+    details.adder .body { padding-top: 12px; }
+
+    /* ---------- login ---------- */
+    .login {
+      display: none;
+      position: fixed; inset: 0; z-index: 60;
+      background: var(--bg);
+      align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .login.show { display: flex; }
+    .login-card {
+      width: 100%; max-width: 380px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 32px 30px 24px;
+      box-shadow: 0 10px 30px rgba(75,53,40,.10);
+    }
+    .login-card h1 { font-size: 24px; margin-bottom: 6px; }
+    .login-note { margin-top: 16px; font-size: 12px; color: var(--muted); text-align: center; line-height: 1.5; }
+    .login-build { margin-top: 10px; text-align: center; font-size: 11px; color: var(--muted); opacity: .7; }
+    .login-back { width: 100%; margin-top: 10px; background: none; border: 0; color: var(--muted); font: inherit; font-size: 13px; text-decoration: underline; cursor: pointer; }
+
+    @media (max-width: 560px) {
+      .page { padding: 22px 14px 48px; }
+      h1 { font-size: 25px; }
+      .grid2 { grid-template-columns: 1fr; }
+      .order-actions button { flex: 1 1 auto; min-height: 44px; }
+      .switch button { flex: 1; }
+    }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+  <div class="page">
+    <h1>Racket Stringing</h1>
+    <p class="sub" id="tagline">LAGCC</p>
+
+    <div class="session" id="session">
+      <span>Signed in as <button type="button" class="linkish who" id="sessionName" title="Change your name"></button></span>
+      <button type="button" class="linkish" id="logoutBtn">Log out</button>
+    </div>
+
+    <div class="switch" id="viewSwitch">
+      <button type="button" data-view="staff" id="tabStaff">Stringing queue</button>
+      <button type="button" data-view="member" id="tabMember">My rackets</button>
+    </div>
+
+    <!-- ============ MEMBER ============ -->
+    <section id="memberView" hidden>
+      <div class="card">
+        <h2>Request a stringing</h2>
+        <form id="orderForm" novalidate>
+          <div class="field">
+            <label for="racket">Racket</label>
+            <input type="text" id="racket" maxlength="60" placeholder="e.g. Wilson Blade 98" />
+          </div>
+          <div class="field">
+            <label for="stringName">String</label>
+            <input type="text" id="stringName" maxlength="60" list="commonStrings" placeholder="e.g. Luxilon ALU Power 16L" />
+            <datalist id="commonStrings">
+              <option value="Luxilon ALU Power 16L"></option>
+              <option value="Babolat RPM Blast 17"></option>
+              <option value="Solinco Hyper-G 16L"></option>
+              <option value="Wilson NXT 16"></option>
+              <option value="Head Lynx Tour 17"></option>
+              <option value="Natural gut 16"></option>
+            </datalist>
+          </div>
+          <div class="grid2">
+            <div class="field">
+              <label for="tension">Tension — mains (lbs)</label>
+              <input type="number" id="tension" inputmode="numeric" min="30" max="75" placeholder="55" />
+            </div>
+            <div class="field">
+              <label for="tensionCross">Crosses (lbs)</label>
+              <input type="number" id="tensionCross" inputmode="numeric" min="30" max="75" placeholder="same as mains" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="dropOff">Day you'll drop it off</label>
+            <input type="date" id="dropOff" />
+          </div>
+          <div class="field">
+            <label for="notes">Anything else (optional)</label>
+            <textarea id="notes" maxlength="300" placeholder="e.g. grommet looks cracked near 3 o'clock"></textarea>
+          </div>
+          <button type="submit" class="primary" id="orderSubmit">Send request</button>
+          <div class="msg" id="orderMsg"></div>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>My rackets</h2>
+        <div class="orders" id="myOrders"></div>
+      </div>
+    </section>
+
+    <!-- ============ STAFF ============ -->
+    <section id="staffView" hidden>
+      <div class="card">
+        <h2>Stringing queue</h2>
+        <div class="filters" id="staffFilters">
+          <button type="button" data-filter="active" class="active">On now</button>
+          <button type="button" data-filter="requested">Waiting</button>
+          <button type="button" data-filter="in_progress">On the bench</button>
+          <button type="button" data-filter="finished">Finished</button>
+          <button type="button" data-filter="all">Everything</button>
+        </div>
+        <div class="orders" id="staffOrders"></div>
+      </div>
+
+      <div class="card">
+        <details class="adder" id="memberAdder">
+          <summary>Add a member</summary>
+          <div class="body">
+            <p class="order-line" style="margin-bottom:12px;">
+              Members can sign in and order without being added — this is for
+              getting someone's name right before their first visit.
+            </p>
+            <div class="grid2">
+              <div class="field">
+                <label for="newMemberName">Name</label>
+                <input type="text" id="newMemberName" maxlength="60" placeholder="Jordan Vega" />
+              </div>
+              <div class="field">
+                <label for="newMemberPhone">Phone</label>
+                <input type="tel" id="newMemberPhone" maxlength="20" placeholder="(555) 123-4567" />
+              </div>
+            </div>
+            <button type="button" class="primary" id="addMemberBtn">Add member</button>
+            <div class="msg" id="addMemberMsg"></div>
+          </div>
+        </details>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ LOGIN ============ -->
+  <div class="login" id="loginScreen">
+    <div class="login-card">
+      <h1>Sign in</h1>
+      <p class="sub" id="loginSub">We'll text you a code.</p>
+      <div class="msg err" id="loginError"></div>
+
+      <form id="phoneStep" novalidate>
+        <div class="field">
+          <label for="loginPhone">Phone number</label>
+          <input type="tel" id="loginPhone" autocomplete="tel" maxlength="20" placeholder="(555) 123-4567" />
+        </div>
+        <button type="submit" class="primary" id="phoneNext">Next</button>
+      </form>
+
+      <form id="codeStep" novalidate hidden>
+        <div class="field">
+          <label for="loginCode">6-digit code</label>
+          <input type="text" id="loginCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" />
+        </div>
+        <button type="submit" class="primary" id="codeVerify">Verify</button>
+        <button type="button" class="login-back" id="codeBack">Use a different number</button>
+      </form>
+
+      <form id="nameStep" novalidate hidden>
+        <div class="field">
+          <label for="loginName">Your name</label>
+          <input type="text" id="loginName" autocomplete="name" maxlength="60" placeholder="Jordan Vega" />
+        </div>
+        <button type="submit" class="primary" id="nameSave">Continue</button>
+      </form>
+
+      <p class="login-note">Anyone at the club can sign in and request a stringing. Stringers see the full queue.</p>
+      <p class="login-build" id="loginBuild"></p>
+      <div id="recaptchaContainer"></div>
+    </div>
+  </div>
+
+  <script>
+    // Same Firebase project as the court schedule — one console to manage, and
+    // phone sign-in is already configured there. This app's data lives under
+    // its own stringing_* collections and never touches the schedule's.
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyD4aAi44uc0WFlP6LTf8NTtIcDh7vJJWkI",
+      authDomain: "lagcc-court-schedule.firebaseapp.com",
+      projectId: "lagcc-court-schedule",
+      storageBucket: "lagcc-court-schedule.firebasestorage.app",
+      messagingSenderId: "813946500866",
+      appId: "1:813946500866:web:c23512a4932263eec6b41b"
+    };
+    const STAFF = "stringing_staff";
+    const MEMBERS = "stringing_members";
+    const ORDERS = "stringing_orders";
+
+    // Shown on the login screen. Phones sit on cached copies for a long time,
+    // and knowing which build a device is actually running has settled more
+    // than one "that fix didn't work" already.
+    const BUILD = "2026-08-22a";
+
+    const STATUS_LABEL = {
+      requested: "Waiting",
+      in_progress: "On the bench",
+      finished: "Ready for pickup"
+    };
+
+    let db = null;
+    let auth = null;
+    let currentUser = null;      // { name, phone }
+    let isStaff = false;
+    let orders = [];
+    let members = {};            // phone -> { name }
+    let ordersSub = null;
+    let membersSub = null;
+    let confirmationResult = null;
+    let recaptcha = null;
+    let staffFilter = "active";
+    let view = "member";
+
+    const $ = id => document.getElementById(id);
+
+    // ---------- formatting ----------
+    function toE164(raw) {
+      const trimmed = (raw || "").trim();
+      if (trimmed.startsWith("+")) {
+        const digits = trimmed.slice(1).replace(/\D/g, "");
+        return digits.length >= 8 && digits.length <= 15 ? "+" + digits : null;
+      }
+      const digits = trimmed.replace(/\D/g, "");
+      if (digits.length === 10) return "+1" + digits;
+      if (digits.length === 11 && digits.startsWith("1")) return "+" + digits;
+      return null;
+    }
+    function prettyPhone(e164) {
+      const m = /^\+1(\d{3})(\d{3})(\d{4})$/.exec(e164 || "");
+      return m ? `(${m[1]}) ${m[2]}-${m[3]}` : (e164 || "");
+    }
+    function ymd(d) {
+      return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") +
+             "-" + String(d.getDate()).padStart(2, "0");
+    }
+    function fmtDate(str) {
+      if (!str) return "";
+      const d = new Date(str + "T12:00:00");
+      return isNaN(d) ? str : new Intl.DateTimeFormat("en-US",
+        { weekday: "short", month: "short", day: "numeric" }).format(d);
+    }
+    function fmtWhen(ms) {
+      if (!ms) return "";
+      return new Intl.DateTimeFormat("en-US",
+        { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(ms));
+    }
+    function tensionText(o) {
+      if (!o.tension) return "";
+      return o.tensionCross && o.tensionCross !== o.tension
+        ? `${o.tension} / ${o.tensionCross} lbs`
+        : `${o.tension} lbs`;
+    }
+    function newId(prefix) {
+      return prefix + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    }
+    function el(tag, cls, text) {
+      const n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (text != null) n.textContent = text;
+      return n;
+    }
+
+    // ---------- rendering ----------
+    function orderCard(o, forStaff) {
+      const card = el("div", "order");
+
+      const top = el("div", "order-top");
+      top.appendChild(el("span", "order-racket", o.racket || "Racket"));
+      top.appendChild(el("span", "badge " + o.status, STATUS_LABEL[o.status] || o.status));
+      card.appendChild(top);
+
+      if (forStaff) {
+        const who = el("div", "order-line");
+        who.innerHTML = "<b></b>";
+        who.querySelector("b").textContent = o.memberName || "Member";
+        who.appendChild(document.createTextNode(" · " + prettyPhone(o.memberPhone)));
+        card.appendChild(who);
+      }
+
+      const spec = el("div", "order-line");
+      const bits = [o.stringName, tensionText(o)].filter(Boolean);
+      spec.textContent = bits.length ? bits.join(" · ") : "No string specified";
+      card.appendChild(spec);
+
+      if (o.dropOffDate) {
+        card.appendChild(el("div", "order-line", "Dropping off " + fmtDate(o.dropOffDate)));
+      }
+
+      if (o.status === "finished" && o.finishedAt) {
+        card.appendChild(el("div", "order-line",
+          "Strung by " + (o.strungByName || "staff") + " · " + fmtWhen(o.finishedAt)));
+      } else if (o.status === "in_progress" && o.startedByName) {
+        card.appendChild(el("div", "order-line", "Started by " + o.startedByName));
+      } else {
+        card.appendChild(el("div", "order-line", "Requested " + fmtWhen(o.createdAt)));
+      }
+
+      if (o.notes) card.appendChild(el("div", "order-note", o.notes));
+
+      const actions = el("div", "order-actions");
+      if (forStaff) {
+        if (o.status === "requested") {
+          const b = el("button", "secondary go", "Start stringing");
+          b.addEventListener("click", () => setStatus(o, "in_progress"));
+          actions.appendChild(b);
+        } else if (o.status === "in_progress") {
+          const b = el("button", "secondary go", "Mark finished");
+          b.addEventListener("click", () => setStatus(o, "finished"));
+          actions.appendChild(b);
+          const back = el("button", "secondary", "Back to waiting");
+          back.addEventListener("click", () => setStatus(o, "requested"));
+          actions.appendChild(back);
+        } else if (o.status === "finished") {
+          const back = el("button", "secondary", "Reopen");
+          back.title = "The member has already been texted that it's ready";
+          back.addEventListener("click", () => setStatus(o, "in_progress"));
+          actions.appendChild(back);
+        }
+      } else if (o.status === "requested") {
+        const cancel = el("button", "secondary warn", "Cancel request");
+        cancel.addEventListener("click", () => cancelOrder(o));
+        actions.appendChild(cancel);
+      }
+      if (actions.children.length) card.appendChild(actions);
+
+      return card;
+    }
+
+    function renderMine() {
+      const wrap = $("myOrders");
+      wrap.innerHTML = "";
+      const mine = orders
+        .filter(o => o.memberPhone === (currentUser && currentUser.phone))
+        .sort(sortForList);
+      if (!mine.length) {
+        wrap.appendChild(el("div", "empty", "Nothing yet. Send a request above and it'll show here."));
+        return;
+      }
+      for (const o of mine) wrap.appendChild(orderCard(o, false));
+    }
+
+    // Live work first and oldest-first inside it, so the queue reads as the
+    // order to actually do things in. Finished work is newest-first, because
+    // there it's a log and the recent end is the interesting one.
+    function sortForList(a, b) {
+      const rank = s => s === "in_progress" ? 0 : s === "requested" ? 1 : 2;
+      const ra = rank(a.status), rb = rank(b.status);
+      if (ra !== rb) return ra - rb;
+      if (ra === 2) return (b.finishedAt || 0) - (a.finishedAt || 0);
+      return (a.createdAt || 0) - (b.createdAt || 0);
+    }
+
+    function renderStaff() {
+      const wrap = $("staffOrders");
+      wrap.innerHTML = "";
+      const list = orders.filter(o =>
+        staffFilter === "all" ? true :
+        staffFilter === "active" ? o.status !== "finished" :
+        o.status === staffFilter
+      ).sort(sortForList);
+
+      $("staffFilters").querySelectorAll("button").forEach(b =>
+        b.classList.toggle("active", b.dataset.filter === staffFilter));
+
+      if (!list.length) {
+        wrap.appendChild(el("div", "empty",
+          staffFilter === "finished" ? "No rackets finished yet." : "Nothing in the queue."));
+        return;
+      }
+      const head = el("div", "order-line count",
+        list.length + (list.length === 1 ? " racket" : " rackets"));
+      head.style.marginBottom = "10px";
+      wrap.appendChild(head);
+      for (const o of list) wrap.appendChild(orderCard(o, true));
+    }
+
+    function render() {
+      if (isStaff) {
+        $("viewSwitch").classList.add("show");
+        $("tabStaff").classList.toggle("active", view === "staff");
+        $("tabMember").classList.toggle("active", view === "member");
+      } else {
+        $("viewSwitch").classList.remove("show");
+        view = "member";
+      }
+      $("staffView").hidden = view !== "staff";
+      $("memberView").hidden = view !== "member";
+      if (view === "staff") renderStaff(); else renderMine();
+    }
+
+    // ---------- writing ----------
+    async function submitOrder(e) {
+      e.preventDefault();
+      const msg = $("orderMsg");
+      msg.className = "msg err";
+      const racket = $("racket").value.trim();
+      const stringName = $("stringName").value.trim();
+      const tension = parseInt($("tension").value, 10);
+      const cross = parseInt($("tensionCross").value, 10);
+      const dropOff = $("dropOff").value;
+
+      if (!racket) { msg.textContent = "Which racket is it?"; return; }
+      if (!stringName) { msg.textContent = "Which string should we use?"; return; }
+      if (!tension || tension < 30 || tension > 75) {
+        msg.textContent = "Enter a tension between 30 and 75 lbs."; return;
+      }
+      if (cross && (cross < 30 || cross > 75)) {
+        msg.textContent = "Cross tension has to be between 30 and 75 lbs too."; return;
+      }
+      if (!dropOff) { msg.textContent = "Pick the day you'll drop it off."; return; }
+
+      const id = newId("s");
+      const order = {
+        id,
+        memberPhone: currentUser.phone,
+        memberName: currentUser.name,
+        racket, stringName,
+        tension,
+        tensionCross: cross || null,
+        dropOffDate: dropOff,
+        notes: $("notes").value.trim(),
+        status: "requested",
+        createdAt: Date.now(),
+        startedAt: null, startedByName: null,
+        finishedAt: null, strungByPhone: null, strungByName: null,
+        notifiedAt: null
+      };
+
+      $("orderSubmit").disabled = true;
+      try {
+        await db.collection(ORDERS).doc(id).set(order);
+        msg.className = "msg ok";
+        msg.textContent = "Sent. We'll text you when it's ready.";
+        $("orderForm").reset();
+        setDefaultDropOff();
+      } catch (err) {
+        console.error("submitOrder", err);
+        msg.className = "msg err";
+        msg.textContent = "Couldn't send that just now. Check your connection and try again.";
+      } finally {
+        $("orderSubmit").disabled = false;
+      }
+    }
+
+    async function setStatus(order, status) {
+      const patch = { status };
+      if (status === "in_progress" && order.status === "requested") {
+        patch.startedAt = Date.now();
+        patch.startedByName = currentUser.name;
+      }
+      if (status === "finished") {
+        patch.finishedAt = Date.now();
+        patch.strungByPhone = currentUser.phone;
+        patch.strungByName = currentUser.name;
+      }
+      if (status === "requested") {
+        patch.startedAt = null;
+        patch.startedByName = null;
+      }
+      // Reopening clears the finish so the text can fire again when it's
+      // genuinely done. The already-sent one can't be recalled, which is what
+      // the button's tooltip says.
+      if (status === "in_progress" && order.status === "finished") {
+        patch.finishedAt = null;
+        patch.strungByPhone = null;
+        patch.strungByName = null;
+        patch.notifiedAt = null;
+      }
+      try {
+        await db.collection(ORDERS).doc(order.id).update(patch);
+      } catch (err) {
+        console.error("setStatus", err);
+        alert("Couldn't update that racket. Check your connection and try again.");
+      }
+    }
+
+    async function cancelOrder(order) {
+      if (order.status !== "requested") return;
+      try {
+        await db.collection(ORDERS).doc(order.id).delete();
+      } catch (err) {
+        console.error("cancelOrder", err);
+      }
+    }
+
+    async function addMember() {
+      const msg = $("addMemberMsg");
+      msg.className = "msg err";
+      const name = $("newMemberName").value.trim();
+      const phone = toE164($("newMemberPhone").value);
+      if (!name) { msg.textContent = "Give them a name."; return; }
+      if (!phone) { msg.textContent = "That doesn't look like a phone number."; return; }
+      try {
+        await db.collection(MEMBERS).doc(phone).set(
+          { name, addedByStaff: true, updatedAt: Date.now() }, { merge: true });
+        msg.className = "msg ok";
+        msg.textContent = name + " added. They can sign in with that number.";
+        $("newMemberName").value = "";
+        $("newMemberPhone").value = "";
+      } catch (err) {
+        console.error("addMember", err);
+        msg.className = "msg err";
+        msg.textContent = "Couldn't add them just now.";
+      }
+    }
+
+    // ---------- live data ----------
+    function startData() {
+      stopData();
+      // Members see only their own; the rules refuse anything wider, so the
+      // query has to say so rather than filtering after the fact.
+      const q = isStaff
+        ? db.collection(ORDERS)
+        : db.collection(ORDERS).where("memberPhone", "==", currentUser.phone);
+      ordersSub = q.onSnapshot(snap => {
+        orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        render();
+      }, err => console.error("orders listener", err));
+
+      if (isStaff) {
+        membersSub = db.collection(MEMBERS).onSnapshot(snap => {
+          members = {};
+          snap.docs.forEach(d => { members[d.id] = d.data(); });
+        }, err => console.error("members listener", err));
+      }
+    }
+    function stopData() {
+      if (ordersSub) { ordersSub(); ordersSub = null; }
+      if (membersSub) { membersSub(); membersSub = null; }
+      orders = [];
+      members = {};
+    }
+
+    function setDefaultDropOff() {
+      const t = new Date();
+      t.setDate(t.getDate() + 1);
+      $("dropOff").value = ymd(t);
+      $("dropOff").min = ymd(new Date());
+    }
+
+    // ---------- session ----------
+    // The court schedule taught this the hard way: only pressing Log out ends
+    // a session. Everything else — a refused read, a token that expired while
+    // the phone slept, the SDK not having finished reading its own store —
+    // gets waited out and retried, because none of them mean the person is
+    // no longer allowed in.
+    const USER_KEY = "stringing:user";
+    const LAST_END_KEY = "stringing:lastSessionEnd";
+    const SESSION_START_KEY = "stringing:sessionStart";
+    const AUTH_GONE_TRIES = 6;
+    const AUTH_GONE_WAIT = 1500;
+    let deliberateLogout = false;
+    let authGoneChecks = 0;
+    let authGoneTimer = null;
+    let authGoneSettled = false;
+    let authGeneration = 0;
+    let pendingRecheck = false;
+    let recheckTimer = null;
+    let recheckAttempts = 0;
+
+    function peekRemembered() {
+      try {
+        const s = JSON.parse(localStorage.getItem(USER_KEY) || "null");
+        return s && s.phone ? s : null;
+      } catch (e) { return null; }
+    }
+    function remember(user, staff) {
+      try { localStorage.setItem(USER_KEY, JSON.stringify({ ...user, staff })); }
+      catch (e) { console.error("remember", e); }
+    }
+    function forget() {
+      try { localStorage.removeItem(USER_KEY); } catch (e) { console.error("forget", e); }
+    }
+    function noteSessionEnd(how) {
+      try {
+        const started = parseInt(localStorage.getItem(SESSION_START_KEY) || "0", 10);
+        const tokenErr = JSON.parse(localStorage.getItem("stringing:lastTokenError") || "null");
+        localStorage.setItem(LAST_END_KEY, JSON.stringify({
+          how, at: new Date().toISOString(),
+          lastedMin: started ? Math.round((Date.now() - started) / 60000) : null,
+          online: navigator.onLine,
+          tokenError: (tokenErr && tokenErr.code) || null
+        }));
+        localStorage.removeItem(SESSION_START_KEY);
+      } catch (e) { console.error("noteSessionEnd", e); }
+      updateBuildStamp();
+    }
+    function noteSessionStart() {
+      try {
+        if (!localStorage.getItem(SESSION_START_KEY)) {
+          localStorage.setItem(SESSION_START_KEY, String(Date.now()));
+        }
+      } catch (e) { console.error("noteSessionStart", e); }
+    }
+    function updateBuildStamp() {
+      const node = $("loginBuild");
+      if (!node) return;
+      let last = null;
+      try { last = JSON.parse(localStorage.getItem(LAST_END_KEY) || "null"); } catch (e) {}
+      const names = {
+        logout: "logged out",
+        "credential-gone": "sign-in vanished"
+      };
+      let line = "Build " + BUILD;
+      if (last && names[last.how]) {
+        line += " · last: " + names[last.how];
+        if (last.lastedMin != null) line += " after " + last.lastedMin + " min";
+        if (last.tokenError) line += " · " + last.tokenError;
+      }
+      node.textContent = line;
+    }
+
+    function showLogin(checking) {
+      $("session").classList.remove("show");
+      $("viewSwitch").classList.remove("show");
+      $("memberView").hidden = true;
+      $("staffView").hidden = true;
+      $("loginScreen").classList.add("show");
+      showPhoneStep();
+      $("phoneNext").disabled = Boolean(checking);
+      $("phoneNext").textContent = checking ? "Checking sign-in…" : "Next";
+    }
+    function showApp() {
+      loginError("");
+      $("loginScreen").classList.remove("show");
+      $("sessionName").textContent = currentUser.name;
+      $("session").classList.add("show");
+      $("tagline").textContent = isStaff ? "LAGCC · stringing room" : "LAGCC";
+      render();
+    }
+    function loginError(text) {
+      $("loginError").textContent = text || "";
+    }
+    function showPhoneStep() {
+      confirmationResult = null;
+      $("codeStep").hidden = true;
+      $("nameStep").hidden = true;
+      $("phoneStep").hidden = false;
+      $("loginCode").value = "";
+    }
+    function showCodeStep() {
+      $("phoneStep").hidden = true;
+      $("nameStep").hidden = true;
+      $("codeStep").hidden = false;
+      $("loginCode").focus();
+    }
+    // Asked once, the first time somebody signs in without a name already on
+    // record. Without it their rackets reach the bench labelled with a phone
+    // number, which tells whoever is stringing nothing.
+    function showNameStep(current) {
+      $("loginScreen").classList.add("show");
+      $("phoneStep").hidden = true;
+      $("codeStep").hidden = true;
+      $("nameStep").hidden = false;
+      $("loginSub").textContent = "What name should we put on your rackets?";
+      $("loginName").value = current || "";
+      $("loginName").focus();
+    }
+
+    async function saveName(e) {
+      if (e) e.preventDefault();
+      const name = $("loginName").value.trim();
+      if (!name) { loginError("Enter a name so we know whose racket it is."); return; }
+      if (!auth || !auth.currentUser) { loginError("Sign in again to set your name."); return; }
+      const phone = auth.currentUser.phoneNumber;
+      $("nameSave").disabled = true;
+      try {
+        await db.collection(MEMBERS).doc(phone).set(
+          { name, addedByStaff: false, updatedAt: Date.now() }, { merge: true });
+        loginError("");
+        // Orders already placed carry the name they were placed under, so
+        // bring those along rather than leaving a phone number on the bench.
+        if (currentUser) currentUser.name = name;
+        await renameMyOrders(phone, name);
+        await handleAuth(auth.currentUser);
+      } catch (err) {
+        console.error("saveName", err);
+        loginError("Couldn't save that just now. Check your connection and try again.");
+      } finally {
+        $("nameSave").disabled = false;
+      }
+    }
+
+    async function renameMyOrders(phone, name) {
+      const mine = orders.filter(o => o.memberPhone === phone && o.memberName !== name);
+      for (const o of mine) {
+        try { await db.collection(ORDERS).doc(o.id).update({ memberName: name }); }
+        catch (err) { console.error("rename order", err); }
+      }
+    }
+
+    function clearAuthGone() {
+      if (authGoneTimer) { clearTimeout(authGoneTimer); authGoneTimer = null; }
+      authGoneChecks = 0;
+    }
+    function endSession() {
+      currentUser = null;
+      isStaff = false;
+      stopData();
+      clearAuthGone();
+      showLogin(false);
+    }
+    function handleAuthGone() {
+      if (deliberateLogout) { deliberateLogout = false; authGoneSettled = true; endSession(); return; }
+      if (authGoneSettled) return;
+      const saved = peekRemembered();
+      if (!saved) { endSession(); return; }
+      if (authGoneChecks < AUTH_GONE_TRIES) {
+        authGoneChecks += 1;
+        if (authGoneTimer) clearTimeout(authGoneTimer);
+        authGoneTimer = setTimeout(() => {
+          authGoneTimer = null;
+          if (auth && auth.currentUser) { clearAuthGone(); handleAuth(auth.currentUser); }
+          else handleAuthGone();
+        }, AUTH_GONE_WAIT);
+        return;
+      }
+      authGoneSettled = true;
+      endSession();
+      noteSessionEnd("credential-gone");
+      $("loginPhone").value = prettyPhone(saved.phone);
+      loginError("Your browser cleared this site's saved sign-in. Nobody logged you out — your number's filled in, a new code brings you back.");
+    }
+
+    function clearRecheck() {
+      if (recheckTimer) { clearTimeout(recheckTimer); recheckTimer = null; }
+      pendingRecheck = false;
+    }
+    function queueRecheck() {
+      pendingRecheck = true;
+      recheckAttempts += 1;
+      const delay = Math.min(30000, 2000 * Math.pow(2, recheckAttempts - 1));
+      if (recheckTimer) clearTimeout(recheckTimer);
+      recheckTimer = setTimeout(runRecheck, delay);
+    }
+    function runRecheck() {
+      if (!pendingRecheck || !auth || !auth.currentUser) return;
+      clearRecheck();
+      handleAuth(auth.currentUser);
+    }
+
+    let lastTokenError = null;
+    async function refreshToken(why) {
+      if (!auth || !auth.currentUser) return;
+      try {
+        await auth.currentUser.getIdToken();
+        lastTokenError = null;
+      } catch (e) {
+        lastTokenError = { code: (e && e.code) || String(e), why };
+        console.error("token refresh failed on " + why, e);
+        try { localStorage.setItem("stringing:lastTokenError", JSON.stringify(lastTokenError)); }
+        catch (err) { /* storage gone too, nothing to do */ }
+      }
+    }
+
+    async function handleAuth(user) {
+      const gen = ++authGeneration;
+      clearRecheck();
+      if (!user) { handleAuthGone(); return; }
+      authGoneSettled = false;
+      clearAuthGone();
+
+      const phone = user.phoneNumber || "";
+      const saved = peekRemembered();
+      // Anyone who got in on this device goes straight back in; the checks
+      // below run behind that and have the last word.
+      if (saved && saved.phone === phone && !currentUser) {
+        currentUser = { name: saved.name, phone };
+        isStaff = Boolean(saved.staff);
+        showApp();
+        startData();
+      }
+
+      let staffDoc = null, memberDoc = null;
+      try {
+        await user.getIdToken();
+        staffDoc = await db.collection(STAFF).doc(phone).get();
+        memberDoc = await db.collection(MEMBERS).doc(phone).get();
+      } catch (e) {
+        console.error("who-are-you check", e);
+        if (gen !== authGeneration) return;
+        // Refused, offline, token not ready — none of these are answers, so
+        // the session stays exactly as it was and this tries again.
+        if (!currentUser) {
+          showLogin(false);
+          loginError("Couldn't reach the stringing log just now. You're still signed in — this keeps retrying on its own.");
+        }
+        queueRecheck();
+        return;
+      }
+      if (gen !== authGeneration) return;
+      recheckAttempts = 0;
+
+      isStaff = staffDoc.exists;
+      const name = (((staffDoc.exists && (staffDoc.data() || {}).name) ||
+                     (memberDoc.exists && (memberDoc.data() || {}).name) || "") + "").trim();
+
+      // Nobody knows who this is yet — a first sign-in that staff hadn't
+      // already added. Ask before letting them order, so their rackets don't
+      // arrive labelled with a phone number.
+      if (!name) { showNameStep(); return; }
+
+      currentUser = { name, phone };
+      remember(currentUser, isStaff);
+      noteSessionStart();
+      if (isStaff && view === "member") view = "staff";
+      showApp();
+      startData();
+    }
+
+    // ---------- sign-in ----------
+    function getRecaptcha() {
+      if (!recaptcha) {
+        recaptcha = new firebase.auth.RecaptchaVerifier("recaptchaContainer", { size: "invisible" });
+      }
+      return recaptcha;
+    }
+    async function resetRecaptcha() {
+      if (!recaptcha) return;
+      try {
+        const id = await recaptcha.render();
+        if (window.grecaptcha) window.grecaptcha.reset(id);
+      } catch (e) { console.error("recaptcha reset", e); }
+    }
+
+    async function sendCode(raw) {
+      const phone = toE164(raw);
+      if (!phone) {
+        loginError("That doesn't look like a phone number. Try a 10-digit US number.");
+        return;
+      }
+      loginError("");
+      $("phoneNext").disabled = true;
+      $("phoneNext").textContent = "Sending…";
+      try {
+        confirmationResult = await auth.signInWithPhoneNumber(phone, getRecaptcha());
+        $("loginSub").textContent = "Code sent to " + prettyPhone(phone) + ".";
+        showCodeStep();
+      } catch (e) {
+        console.error("sendCode", e);
+        await resetRecaptcha();
+        if (e.code === "auth/too-many-requests") {
+          loginError("Too many sign-in attempts for this number. Firebase pauses new codes for a while — it lifts on its own, usually within an hour.");
+        } else if (e.code === "auth/invalid-phone-number") {
+          loginError("Firebase didn't accept that number. Check the digits.");
+        } else if (e.code === "auth/unauthorized-domain" || e.code === "auth/captcha-check-failed") {
+          loginError("This site isn't an authorised domain for sign-in yet. Add it under Firebase → Authentication → Settings → Authorised domains.");
+        } else {
+          loginError("Couldn't send the code. Please try again.");
+        }
+      } finally {
+        $("phoneNext").disabled = false;
+        $("phoneNext").textContent = "Next";
+      }
+    }
+
+    async function verifyCode(raw) {
+      const code = (raw || "").replace(/\D/g, "");
+      if (!confirmationResult) { showPhoneStep(); return; }
+      if (code.length !== 6) { loginError("Enter the 6-digit code."); return; }
+      loginError("");
+      $("codeVerify").disabled = true;
+      $("codeVerify").textContent = "Verifying…";
+      try {
+        await confirmationResult.confirm(code);
+        // handleAuth takes it from here, via onAuthStateChanged.
+      } catch (e) {
+        console.error("verifyCode", e);
+        loginError(e.code === "auth/invalid-verification-code"
+          ? "That code didn't match. Check the digits and try again."
+          : "Couldn't verify that code. Try again.");
+      } finally {
+        $("codeVerify").disabled = false;
+        $("codeVerify").textContent = "Verify";
+      }
+    }
+
+    function logout() {
+      deliberateLogout = true;
+      noteSessionEnd("logout");
+      forget();
+      stopData();
+      currentUser = null;
+      isStaff = false;
+      view = "member";
+      if (auth) auth.signOut().catch(e => console.error("signOut", e));
+      else showLogin(false);
+    }
+
+    // ---------- start ----------
+    function initFirebase() {
+      try {
+        if (typeof firebase === "undefined") throw new Error("Firebase SDK failed to load");
+        firebase.initializeApp(FIREBASE_CONFIG);
+        db = firebase.firestore();
+        db.enablePersistence({ synchronizeTabs: true })
+          .catch(e => console.warn("offline cache unavailable", (e && e.code) || e));
+        if (navigator.storage && navigator.storage.persist) {
+          navigator.storage.persisted()
+            .then(already => already || navigator.storage.persist())
+            .catch(e => console.warn("persistent storage unavailable", e));
+        }
+        auth = firebase.auth();
+        const watch = () => auth.onAuthStateChanged(handleAuth, err => {
+          console.error("auth state", err);
+          if (currentUser) return;
+          showLogin(false);
+          loginError(peekRemembered()
+            ? "Couldn't reach the sign-in service just now — you haven't been logged out."
+            : "Couldn't reach the sign-in service. Check your connection and reload.");
+        });
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+          .catch(e => console.error("auth persistence", e))
+          .then(watch, watch);
+      } catch (e) {
+        console.error("firebase init", e);
+        showLogin(false);
+        loginError("Couldn't load the sign-in service. Check your connection and reload.");
+      }
+    }
+
+    $("phoneStep").addEventListener("submit", e => { e.preventDefault(); sendCode($("loginPhone").value); });
+    $("codeStep").addEventListener("submit", e => { e.preventDefault(); verifyCode($("loginCode").value); });
+    $("codeBack").addEventListener("click", () => { showPhoneStep(); loginError(""); $("loginPhone").focus(); });
+    $("logoutBtn").addEventListener("click", logout);
+    $("nameStep").addEventListener("submit", saveName);
+    $("sessionName").addEventListener("click", () => {
+      if (!currentUser) return;
+      loginError("");
+      showNameStep(currentUser.name);
+    });
+    $("orderForm").addEventListener("submit", submitOrder);
+    $("addMemberBtn").addEventListener("click", addMember);
+    $("staffFilters").addEventListener("click", e => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      staffFilter = b.dataset.filter;
+      renderStaff();
+    });
+    $("viewSwitch").addEventListener("click", e => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      view = b.dataset.view;
+      render();
+    });
+
+    // Coming back to a tab the phone put to sleep is the moment to deal with
+    // the token, which only lasts an hour. Refreshing here keeps a stale one
+    // from ever reaching the rules.
+    function onResume(why) { refreshToken(why); runRecheck(); }
+    window.addEventListener("online", () => onResume("online"));
+    window.addEventListener("pageshow", () => onResume("pageshow"));
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) onResume("foreground"); });
+
+    updateBuildStamp();
+    setDefaultDropOff();
+    showLogin(true);
+    initFirebase();
+  </script>
+</body>
+</html>

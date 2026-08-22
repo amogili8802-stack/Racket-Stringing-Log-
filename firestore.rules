@@ -1,0 +1,119 @@
+rules_version = '2';
+
+// ============================================================================
+// DO NOT PASTE THIS INTO THE lagcc-court-schedule PROJECT AS-IS.
+//
+// A Firebase project has ONE rules file covering every collection in it.
+// Publishing this file to the project that runs the court schedule would
+// replace the court schedule's rules, and its `lagcc_allowed` gate along with
+// them — every coach would lose access on their next load.
+//
+// This file is written for a Firebase project of its own. If the stringing
+// log is ever moved into the court schedule's project instead, the two rule
+// sets have to be merged into a single file first.
+// ============================================================================
+//
+// Access control for the LAGCC racket stringing log.
+//
+// Two kinds of people, both signed in with a verified phone number:
+//
+//   Members  — anyone signed in. They place orders for themselves and see
+//              their own rackets. No list is kept of who may sign in; a
+//              member record is created the first time someone signs in.
+//
+//   Staff    — the stringers. A document in `stringing_staff` IS the staff
+//              list, exactly the way `lagcc_allowed` gates the court
+//              schedule. Staff see every order, change status, and add
+//              members ahead of time.
+//
+//   Document ID:  +15551234567          (E.164)
+//   Field:        name (string)         e.g. "Anjali"
+//
+//   Add a stringer:     create that document under stringing_staff
+//   Remove a stringer:  delete it (they lose the staff view on next load)
+//
+// Because only an admin can set `name` in stringing_staff, nobody can
+// relabel whose work a racket was strung under.
+//
+// Phone numbers are deliberately kept out of this repository. Manage the
+// staff list in the Firebase console: Firestore Database -> Data.
+//
+// To apply: Firebase console -> Firestore Database -> Rules -> paste ->
+// Publish. Add your own number to stringing_staff BEFORE publishing, or
+// you'll have no staff view — the console itself always keeps working.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function callerPhone() {
+      return request.auth != null ? request.auth.token.phone_number : "";
+    }
+
+    function signedIn() {
+      return request.auth != null && callerPhone() != null && callerPhone() != "";
+    }
+
+    function isStaff() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/stringing_staff/$(callerPhone()));
+    }
+
+    // Everyone may read their own entry — that's how the app knows whether to
+    // show the staff view. Nobody can read anyone else's, list the
+    // collection, or write to it from the app.
+    match /stringing_staff/{phone} {
+      allow get: if signedIn() && callerPhone() == phone;
+      allow list, write: if false;
+    }
+
+    // A member record holds the name orders are labelled with. Members create
+    // and edit their own; staff can create one ahead of time so a member's
+    // name is already right the first time they sign in, and can read the
+    // whole roster.
+    match /stringing_members/{phone} {
+      allow get: if signedIn() && (callerPhone() == phone || isStaff());
+      allow list: if isStaff();
+      allow create, update: if signedIn() && (callerPhone() == phone || isStaff());
+      allow delete: if isStaff();
+    }
+
+    match /stringing_orders/{orderId} {
+      // Members read their own; staff read everything. A member's query has to
+      // be constrained to their own number or the read is refused, which is
+      // what keeps one member from listing another's rackets.
+      allow read: if isStaff() || (signedIn() && resource.data.memberPhone == callerPhone());
+
+      // An order can only be placed in your own name, and only as a request —
+      // nobody hands themselves a finished racket, or one strung by someone
+      // else.
+      allow create: if signedIn()
+        && request.resource.data.memberPhone == callerPhone()
+        && request.resource.data.status == "requested"
+        && request.resource.data.strungByName == null
+        && request.resource.data.finishedAt == null;
+
+      // Status, and who strung it, are the stringers' to set. A member may
+      // still correct the details of a request that hasn't been picked up.
+      allow update: if isStaff()
+        || (signedIn()
+            && resource.data.memberPhone == callerPhone()
+            && resource.data.status == "requested"
+            && request.resource.data.status == "requested"
+            && request.resource.data.memberPhone == resource.data.memberPhone
+            && request.resource.data.strungByName == null
+            && request.resource.data.finishedAt == null);
+
+      // A member can withdraw a request nobody has started on. Once it's on
+      // the bench it's the stringers' call.
+      allow delete: if isStaff()
+        || (signedIn()
+            && resource.data.memberPhone == callerPhone()
+            && resource.data.status == "requested");
+    }
+
+    // Anything not named above stays closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
