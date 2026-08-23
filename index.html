@@ -156,6 +156,24 @@
     details.adder[open] summary::before { content: "− "; }
     details.adder .body { padding-top: 12px; }
 
+    /* ---------- demo ---------- */
+    .demo-bar {
+      display: none;
+      align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+      padding: 9px 14px; margin-bottom: 18px;
+      background: #3f3128; color: #f6efe4;
+      border-radius: 10px;
+      font-size: 12.5px; font-weight: 650;
+    }
+    .demo-bar.show { display: flex; }
+    .demo-bar button {
+      height: 30px; padding: 0 11px;
+      border: 1px solid rgba(255,255,255,.35); border-radius: 7px;
+      background: transparent; color: inherit;
+      font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+    .demo-bar button.active { background: #f6efe4; color: #3f3128; border-color: #f6efe4; }
+
     /* ---------- login ---------- */
     .login {
       display: none;
@@ -193,6 +211,13 @@
 <body>
 
   <div class="page">
+    <div class="demo-bar" id="demoBar">
+      <span>Demo — sample data, nothing saved</span>
+      <button type="button" data-as="member" id="demoMember">View as member</button>
+      <button type="button" data-as="staff" id="demoStaff">View as stringer</button>
+      <button type="button" id="demoReset">Reset data</button>
+    </div>
+
     <h1>Racket Stringing</h1>
     <p class="sub" id="tagline">LAGCC</p>
 
@@ -1009,8 +1034,17 @@
           loginError("Firebase didn't accept that number. Check the digits.");
         } else if (e.code === "auth/unauthorized-domain" || e.code === "auth/captcha-check-failed") {
           loginError("This site isn't an authorised domain for sign-in yet. Add it under Firebase → Authentication → Settings → Authorised domains.");
+        } else if (e.code === "auth/operation-not-allowed") {
+          loginError("Phone sign-in isn't switched on for this project. Firebase → Authentication → Sign-in method → Phone → Enable.");
+        } else if (e.code === "auth/billing-not-enabled" || e.code === "auth/quota-exceeded") {
+          loginError("Firebase won't send any more codes on this project's current plan. Check Authentication → Usage, and the project's billing plan.");
         } else {
-          loginError("Couldn't send the code. Please try again.");
+          // Naming the code matters more than reading nicely. A generic "try
+          // again" here hides the one fact that identifies the problem, and
+          // whoever is looking at this screen is the only person who can see it.
+          loginError("Couldn't send the code — Firebase said: " +
+            ((e && e.code) || (e && e.message) || "no reason given") +
+            ". Tell whoever set this up.");
         }
       } finally {
         $("phoneNext").disabled = false;
@@ -1116,10 +1150,123 @@
     window.addEventListener("pageshow", () => onResume("pageshow"));
     document.addEventListener("visibilitychange", () => { if (!document.hidden) onResume("foreground"); });
 
+    // ---------- demo mode ----------
+    // Add ?demo to the URL and the app runs on sample data held in memory, with
+    // no Firebase and no sign-in. It's how the site gets worked on while phone
+    // auth is still being sorted out, and it doubles as a way to show the
+    // stringers what this is without anyone having to log in. Strictly opt-in
+    // via the query string, so it can't be reached by accident in normal use.
+    const DEMO = new URLSearchParams(location.search).has("demo");
+    const DEMO_STAFF = "+15550000001";
+    const DEMO_MEMBER = "+15550000002";
+
+    function demoSeed() {
+      const now = Date.now(), hr = 3600000, day = 24 * hr;
+      return {
+        stringing_staff: {
+          [DEMO_STAFF]: { name: "Anjali" },
+          "+15550000003": { name: "Lou" }
+        },
+        stringing_members: {
+          [DEMO_MEMBER]: { name: "Jordan Vega" },
+          "+15550000004": { name: "Priya Raman" },
+          "+15550000005": { name: "Marcus Hill" }
+        },
+        stringing_orders: {
+          d1: { id: "d1", memberPhone: DEMO_MEMBER, memberName: "Jordan Vega",
+                racket: "Wilson Blade 98", stringName: "Luxilon ALU Power 16L",
+                tension: 54, tensionCross: 52, dropOffDate: ymd(new Date(now + day)),
+                notes: "grommet looks cracked near 3 o'clock", status: "requested",
+                createdAt: now - 2 * hr, startedAt: null, startedByName: null,
+                finishedAt: null, strungByName: null, notifiedAt: null },
+          d2: { id: "d2", memberPhone: "+15550000004", memberName: "Priya Raman",
+                racket: "Babolat Pure Aero", stringName: "RPM Blast 17",
+                tension: 52, tensionCross: null, dropOffDate: ymd(new Date(now)),
+                notes: "", status: "in_progress",
+                createdAt: now - 26 * hr, startedAt: now - hr, startedByName: "Anjali",
+                finishedAt: null, strungByName: null, notifiedAt: null },
+          d3: { id: "d3", memberPhone: "+15550000005", memberName: "Marcus Hill",
+                racket: "Head Speed MP", stringName: "Solinco Hyper-G 16L",
+                tension: 50, tensionCross: 48, dropOffDate: ymd(new Date(now - 2 * day)),
+                notes: "", status: "finished",
+                createdAt: now - 3 * day, startedAt: now - 2 * day,
+                startedByName: "Lou", finishedAt: now - 2 * day + hr,
+                strungByName: "Lou", notifiedAt: now - 2 * day + hr },
+          d4: { id: "d4", memberPhone: DEMO_MEMBER, memberName: "Jordan Vega",
+                racket: "Wilson Blade 98", stringName: "Head Lynx Tour 17",
+                tension: 55, tensionCross: null, dropOffDate: ymd(new Date(now - 20 * day)),
+                notes: "", status: "finished",
+                createdAt: now - 21 * day, startedAt: now - 20 * day,
+                startedByName: "Anjali", finishedAt: now - 20 * day + 2 * hr,
+                strungByName: "Anjali", notifiedAt: now - 20 * day + 2 * hr }
+        }
+      };
+    }
+
+    function startDemo() {
+      let store = demoSeed();
+      let subs = [];
+      const fire = () => subs.forEach(fn => fn());
+
+      const docRef = (col, id) => ({
+        get: async () => ({ exists: Boolean(store[col][id]), data: () => store[col][id],
+                            metadata: { fromCache: false } }),
+        set: async (v, opt) => { store[col][id] = opt && opt.merge
+                                   ? { ...(store[col][id] || {}), ...v } : v; fire(); },
+        update: async v => { Object.assign(store[col][id], v); fire(); },
+        delete: async () => { delete store[col][id]; fire(); }
+      });
+      const colRef = (col, filter) => {
+        const snap = () => ({
+          docs: Object.entries(store[col])
+            .filter(([, d]) => !filter || d[filter.field] === filter.value)
+            .map(([id, d]) => ({ id, data: () => d }))
+        });
+        return {
+          doc: id => docRef(col, id),
+          where: (field, _op, value) => colRef(col, { field, value }),
+          onSnapshot: cb => {
+            const run = () => cb(snap());
+            subs.push(run); run();
+            return () => { subs = subs.filter(fn => fn !== run); };
+          }
+        };
+      };
+      db = { collection: col => colRef(col) };
+
+      const asPerson = async phone => {
+        auth = { currentUser: { phoneNumber: phone, getIdToken: async () => "demo" },
+                 signOut: async () => {} };
+        currentUser = null; isStaff = false;
+        authGoneSettled = true;      // no real session to lose in here
+        clearAuthGone();
+        try { localStorage.removeItem(USER_KEY); } catch (e) {}
+        await handleAuth(auth.currentUser);
+        $("demoMember").classList.toggle("active", phone === DEMO_MEMBER);
+        $("demoStaff").classList.toggle("active", phone === DEMO_STAFF);
+      };
+
+      $("demoBar").classList.add("show");
+      $("demoMember").addEventListener("click", () => asPerson(DEMO_MEMBER));
+      $("demoStaff").addEventListener("click", () => asPerson(DEMO_STAFF));
+      $("demoReset").addEventListener("click", () => { store = demoSeed(); fire(); });
+      // Log out has nothing to sign out of here; put them back as a member.
+      $("logoutBtn").addEventListener("click", e => {
+        e.stopImmediatePropagation();
+        asPerson(DEMO_MEMBER);
+      }, true);
+
+      asPerson(DEMO_STAFF);
+    }
+
     updateBuildStamp();
     setDefaultDropOff();
-    showLogin(true);
-    initFirebase();
+    if (DEMO) {
+      startDemo();
+    } else {
+      showLogin(true);
+      initFirebase();
+    }
   </script>
 </body>
 </html>
