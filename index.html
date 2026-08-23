@@ -135,6 +135,17 @@
       font-size: 13px;
     }
     .order-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .finish-panel {
+      margin-top: 11px; padding: 11px;
+      background: #fff; border: 1px solid var(--border); border-radius: 8px;
+    }
+    .finish-title { font-size: 12px; font-weight: 750; margin-bottom: 8px; color: var(--muted); }
+    .finish-row { display: flex; gap: 7px; align-items: center; margin-bottom: 7px; }
+    .finish-row:last-child { margin-bottom: 0; }
+    .finish-row input, .finish-row select { padding: 8px; font-size: 14px; }
+    .finish-row input:first-child { flex: 2 1 40%; }
+    .finish-row input + input { flex: 1 1 22%; min-width: 74px; }
+    .finish-label { font-size: 12.5px; font-weight: 650; color: var(--muted); white-space: nowrap; }
 
     .empty { padding: 18px 2px; color: var(--muted); font-size: 14px; font-weight: 600; text-align: center; }
     .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
@@ -262,9 +273,18 @@
               <input type="number" id="tensionCross" inputmode="numeric" min="30" max="75" placeholder="same as mains" />
             </div>
           </div>
-          <div class="field">
-            <label for="dropOff">Day you'll drop it off</label>
-            <input type="date" id="dropOff" />
+          <div class="grid2">
+            <div class="field">
+              <label for="dropOff">Day you'll drop it off</label>
+              <input type="date" id="dropOff" />
+            </div>
+            <div class="field">
+              <label for="dropOffSlot">Time</label>
+              <select id="dropOffSlot">
+                <option value="am">8am – 12pm</option>
+                <option value="pm">12pm – 4pm</option>
+              </select>
+            </div>
           </div>
           <div class="field">
             <label for="notes">Anything else (optional)</label>
@@ -279,6 +299,11 @@
         <h2>My rackets</h2>
         <div class="orders" id="myOrders"></div>
       </div>
+
+      <div class="card">
+        <h2>Past orders</h2>
+        <div class="orders" id="myPastOrders"></div>
+      </div>
     </section>
 
     <!-- ============ STAFF ============ -->
@@ -288,11 +313,20 @@
         <div class="filters" id="staffFilters">
           <button type="button" data-filter="active" class="active">On now</button>
           <button type="button" data-filter="requested">Waiting</button>
-          <button type="button" data-filter="in_progress">On the bench</button>
-          <button type="button" data-filter="finished">Finished</button>
-          <button type="button" data-filter="all">Everything</button>
+          <button type="button" data-filter="in_progress">In progress</button>
         </div>
         <div class="orders" id="staffOrders"></div>
+      </div>
+
+      <div class="card">
+        <h2>Past orders</h2>
+        <p class="order-line" style="margin:-8px 0 12px;">
+          Every racket anyone has finished, newest first.
+        </p>
+        <div class="field" style="margin-bottom:12px;">
+          <input type="search" id="pastSearch" placeholder="Search by member, number, racket or string" />
+        </div>
+        <div class="orders" id="staffPastOrders"></div>
       </div>
 
       <div class="card">
@@ -305,13 +339,17 @@
             </p>
             <div class="grid2">
               <div class="field">
-                <label for="newMemberName">Name</label>
+                <label for="newMemberName">Full name</label>
                 <input type="text" id="newMemberName" maxlength="60" placeholder="Jordan Vega" />
               </div>
               <div class="field">
-                <label for="newMemberPhone">Phone</label>
-                <input type="tel" id="newMemberPhone" maxlength="20" placeholder="(555) 123-4567" />
+                <label for="newMemberNo">Member number</label>
+                <input type="text" id="newMemberNo" maxlength="20" placeholder="1042" />
               </div>
+            </div>
+            <div class="field">
+              <label for="newMemberPhone">Phone</label>
+              <input type="tel" id="newMemberPhone" maxlength="20" placeholder="(555) 123-4567" />
             </div>
             <button type="button" class="primary" id="addMemberBtn">Add member</button>
             <div class="msg" id="addMemberMsg"></div>
@@ -347,8 +385,12 @@
 
       <form id="nameStep" novalidate hidden>
         <div class="field">
-          <label for="loginName">Your name</label>
+          <label for="loginName">Full name</label>
           <input type="text" id="loginName" autocomplete="name" maxlength="60" placeholder="Jordan Vega" />
+        </div>
+        <div class="field">
+          <label for="loginMemberNo">Member number</label>
+          <input type="text" id="loginMemberNo" maxlength="20" placeholder="1042" />
         </div>
         <button type="submit" class="primary" id="nameSave">Continue</button>
       </form>
@@ -383,9 +425,15 @@
 
     const STATUS_LABEL = {
       requested: "Waiting",
-      in_progress: "On the bench",
+      in_progress: "In progress",
       finished: "Ready for pickup"
     };
+    // The two windows a racket can be dropped off in.
+    const SLOTS = [
+      { id: "am", label: "8am – 12pm" },
+      { id: "pm", label: "12pm – 4pm" }
+    ];
+    const slotLabel = id => (SLOTS.find(s => s.id === id) || {}).label || "";
 
     let db = null;
     let auth = null;
@@ -395,6 +443,8 @@
     let members = {};            // phone -> { name }
     let ordersSub = null;
     let membersSub = null;
+    let staffSub = null;
+    let staffRoster = [];        // [{ phone, name }] — stringers, staff-only
     let confirmationResult = null;
     let recaptcha = null;
     let staffFilter = "active";
@@ -433,11 +483,9 @@
       return new Intl.DateTimeFormat("en-US",
         { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(ms));
     }
-    function tensionText(o) {
-      if (!o.tension) return "";
-      return o.tensionCross && o.tensionCross !== o.tension
-        ? `${o.tension} / ${o.tensionCross} lbs`
-        : `${o.tension} lbs`;
+    function tensionText(mains, crosses) {
+      if (!mains) return "";
+      return crosses && crosses !== mains ? `${mains} / ${crosses} lbs` : `${mains} lbs`;
     }
     function newId(prefix) {
       return prefix + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -460,24 +508,47 @@
 
       if (forStaff) {
         const who = el("div", "order-line");
-        who.innerHTML = "<b></b>";
-        who.querySelector("b").textContent = o.memberName || "Member";
-        who.appendChild(document.createTextNode(" · " + prettyPhone(o.memberPhone)));
+        const b = el("b", null, o.memberName || "Member");
+        who.appendChild(b);
+        const tail = [o.memberNumber ? "#" + o.memberNumber : "", prettyPhone(o.memberPhone)]
+          .filter(Boolean).join(" · ");
+        if (tail) who.appendChild(document.createTextNode(" · " + tail));
         card.appendChild(who);
       }
 
-      const spec = el("div", "order-line");
-      const bits = [o.stringName, tensionText(o)].filter(Boolean);
-      spec.textContent = bits.length ? bits.join(" · ") : "No string specified";
-      card.appendChild(spec);
+      // What they asked for, and — once it's done — what actually went in.
+      // They aren't always the same: a stringer may swap a string that's out
+      // of stock or adjust a tension, and the log has to say what's on the
+      // racket, not what was hoped for.
+      const asked = [o.stringName, tensionText(o.tension, o.tensionCross)].filter(Boolean).join(" · ");
+      if (o.status === "finished") {
+        const strung = [o.actualString || o.stringName,
+                        tensionText(o.actualTension || o.tension,
+                                    o.actualTensionCross != null ? o.actualTensionCross : o.tensionCross)]
+                       .filter(Boolean).join(" · ");
+        const line = el("div", "order-line");
+        line.appendChild(el("b", null, "Strung with "));
+        line.appendChild(document.createTextNode(strung || "—"));
+        card.appendChild(line);
+        if (strung !== asked && asked) {
+          card.appendChild(el("div", "order-line", "Asked for " + asked));
+        }
+      } else {
+        card.appendChild(el("div", "order-line", asked || "No string specified"));
+      }
 
       if (o.dropOffDate) {
-        card.appendChild(el("div", "order-line", "Dropping off " + fmtDate(o.dropOffDate)));
+        card.appendChild(el("div", "order-line",
+          "Dropping off " + fmtDate(o.dropOffDate) +
+          (o.dropOffSlot ? " · " + slotLabel(o.dropOffSlot) : "")));
       }
 
       if (o.status === "finished" && o.finishedAt) {
         card.appendChild(el("div", "order-line",
           "Strung by " + (o.strungByName || "staff") + " · " + fmtWhen(o.finishedAt)));
+        if (o.chargedByName) {
+          card.appendChild(el("div", "order-line", "Charged by " + o.chargedByName));
+        }
       } else if (o.status === "in_progress" && o.startedByName) {
         card.appendChild(el("div", "order-line", "Started by " + o.startedByName));
       } else {
@@ -485,6 +556,41 @@
       }
 
       if (o.notes) card.appendChild(el("div", "order-note", o.notes));
+
+      // The stringer fills these in as they work, so the details are already
+      // right when they press finish rather than being reconstructed after.
+      let panel = null;
+      if (forStaff && o.status === "in_progress") {
+        panel = el("div", "finish-panel");
+        panel.appendChild(el("div", "finish-title", "What went on it"));
+        const row = el("div", "finish-row");
+        const sIn = el("input");
+        sIn.type = "text"; sIn.placeholder = "String"; sIn.value = o.actualString || o.stringName || "";
+        const tIn = el("input");
+        tIn.type = "number"; tIn.placeholder = "Mains";
+        tIn.value = o.actualTension != null ? o.actualTension : (o.tension || "");
+        const cIn = el("input");
+        cIn.type = "number"; cIn.placeholder = "Crosses";
+        cIn.value = o.actualTensionCross != null ? o.actualTensionCross
+                  : (o.tensionCross != null ? o.tensionCross : "");
+        row.appendChild(sIn); row.appendChild(tIn); row.appendChild(cIn);
+        panel.appendChild(row);
+
+        const chargeRow = el("div", "finish-row");
+        const chargeLabel = el("span", "finish-label", "Charged by");
+        const sel = el("select");
+        const names = staffNames();
+        for (const n of names) {
+          const opt = document.createElement("option");
+          opt.value = n; opt.textContent = n;
+          if (n === (o.chargedByName || (currentUser && currentUser.name))) opt.selected = true;
+          sel.appendChild(opt);
+        }
+        chargeRow.appendChild(chargeLabel); chargeRow.appendChild(sel);
+        panel.appendChild(chargeRow);
+        card.appendChild(panel);
+        panel._fields = { sIn, tIn, cIn, sel };
+      }
 
       const actions = el("div", "order-actions");
       if (forStaff) {
@@ -494,7 +600,7 @@
           actions.appendChild(b);
         } else if (o.status === "in_progress") {
           const b = el("button", "secondary go", "Mark finished");
-          b.addEventListener("click", () => setStatus(o, "finished"));
+          b.addEventListener("click", () => finishOrder(o, panel._fields));
           actions.appendChild(b);
           const back = el("button", "secondary", "Back to waiting");
           back.addEventListener("click", () => setStatus(o, "requested"));
@@ -516,16 +622,26 @@
     }
 
     function renderMine() {
-      const wrap = $("myOrders");
-      wrap.innerHTML = "";
-      const mine = orders
-        .filter(o => o.memberPhone === (currentUser && currentUser.phone))
-        .sort(sortForList);
-      if (!mine.length) {
-        wrap.appendChild(el("div", "empty", "Nothing yet. Send a request above and it'll show here."));
-        return;
+      const mine = orders.filter(o => o.memberPhone === (currentUser && currentUser.phone));
+      const live = mine.filter(o => o.status !== "finished").sort(sortForList);
+      const past = mine.filter(o => o.status === "finished")
+                       .sort((a, b) => (b.finishedAt || 0) - (a.finishedAt || 0));
+
+      const now = $("myOrders");
+      now.innerHTML = "";
+      if (!live.length) {
+        now.appendChild(el("div", "empty", "Nothing in yet. Send a request above and it'll show here."));
+      } else {
+        for (const o of live) now.appendChild(orderCard(o, false));
       }
-      for (const o of mine) wrap.appendChild(orderCard(o, false));
+
+      const old = $("myPastOrders");
+      old.innerHTML = "";
+      if (!past.length) {
+        old.appendChild(el("div", "empty", "Rackets you've had strung will be listed here."));
+      } else {
+        for (const o of past) old.appendChild(orderCard(o, false));
+      }
     }
 
     // Live work first and oldest-first inside it, so the queue reads as the
@@ -542,25 +658,50 @@
     function renderStaff() {
       const wrap = $("staffOrders");
       wrap.innerHTML = "";
-      const list = orders.filter(o =>
-        staffFilter === "all" ? true :
-        staffFilter === "active" ? o.status !== "finished" :
-        o.status === staffFilter
+      const live = orders.filter(o => o.status !== "finished").filter(o =>
+        staffFilter === "active" ? true : o.status === staffFilter
       ).sort(sortForList);
 
       $("staffFilters").querySelectorAll("button").forEach(b =>
         b.classList.toggle("active", b.dataset.filter === staffFilter));
 
-      if (!list.length) {
+      if (!live.length) {
+        wrap.appendChild(el("div", "empty", "Nothing in the queue."));
+      } else {
+        const head = el("div", "order-line count",
+          live.length + (live.length === 1 ? " racket" : " rackets"));
+        head.style.marginBottom = "10px";
+        wrap.appendChild(head);
+        for (const o of live) wrap.appendChild(orderCard(o, true));
+      }
+
+      renderStaffPast();
+    }
+
+    // Everything anyone has finished. Searchable because the useful question
+    // here is usually about one member or one string, not about the whole log.
+    function renderStaffPast() {
+      const wrap = $("staffPastOrders");
+      if (!wrap) return;
+      wrap.innerHTML = "";
+      const q = ($("pastSearch").value || "").trim().toLowerCase();
+      const past = orders
+        .filter(o => o.status === "finished")
+        .filter(o => !q || [o.memberName, o.memberNumber, o.racket, o.stringName,
+                            o.actualString, o.strungByName, o.chargedByName]
+                            .some(v => (v || "").toString().toLowerCase().includes(q)))
+        .sort((a, b) => (b.finishedAt || 0) - (a.finishedAt || 0));
+
+      if (!past.length) {
         wrap.appendChild(el("div", "empty",
-          staffFilter === "finished" ? "No rackets finished yet." : "Nothing in the queue."));
+          q ? "Nothing matches that." : "No rackets finished yet."));
         return;
       }
       const head = el("div", "order-line count",
-        list.length + (list.length === 1 ? " racket" : " rackets"));
+        past.length + (past.length === 1 ? " racket" : " rackets"));
       head.style.marginBottom = "10px";
       wrap.appendChild(head);
-      for (const o of list) wrap.appendChild(orderCard(o, true));
+      for (const o of past) wrap.appendChild(orderCard(o, true));
     }
 
     function render() {
@@ -603,15 +744,19 @@
         id,
         memberPhone: currentUser.phone,
         memberName: currentUser.name,
+        memberNumber: currentUser.memberNumber || "",
         racket, stringName,
         tension,
         tensionCross: cross || null,
         dropOffDate: dropOff,
+        dropOffSlot: $("dropOffSlot").value,
         notes: $("notes").value.trim(),
         status: "requested",
         createdAt: Date.now(),
         startedAt: null, startedByName: null,
         finishedAt: null, strungByPhone: null, strungByName: null,
+        actualString: null, actualTension: null, actualTensionCross: null,
+        chargedByName: null,
         notifiedAt: null
       };
 
@@ -631,16 +776,30 @@
       }
     }
 
+    async function finishOrder(order, fields) {
+      const patch = {
+        status: "finished",
+        finishedAt: Date.now(),
+        strungByPhone: currentUser.phone,
+        strungByName: currentUser.name,
+        actualString: (fields.sIn.value || "").trim() || order.stringName || "",
+        actualTension: parseInt(fields.tIn.value, 10) || order.tension || null,
+        actualTensionCross: parseInt(fields.cIn.value, 10) || null,
+        chargedByName: fields.sel.value || currentUser.name
+      };
+      try {
+        await db.collection(ORDERS).doc(order.id).update(patch);
+      } catch (err) {
+        console.error("finishOrder", err);
+        alert("Couldn't finish that racket. Check your connection and try again.");
+      }
+    }
+
     async function setStatus(order, status) {
       const patch = { status };
       if (status === "in_progress" && order.status === "requested") {
         patch.startedAt = Date.now();
         patch.startedByName = currentUser.name;
-      }
-      if (status === "finished") {
-        patch.finishedAt = Date.now();
-        patch.strungByPhone = currentUser.phone;
-        patch.strungByName = currentUser.name;
       }
       if (status === "requested") {
         patch.startedAt = null;
@@ -653,6 +812,7 @@
         patch.finishedAt = null;
         patch.strungByPhone = null;
         patch.strungByName = null;
+        patch.chargedByName = null;
         patch.notifiedAt = null;
       }
       try {
@@ -676,15 +836,18 @@
       const msg = $("addMemberMsg");
       msg.className = "msg err";
       const name = $("newMemberName").value.trim();
+      const memberNumber = $("newMemberNo").value.trim();
       const phone = toE164($("newMemberPhone").value);
-      if (!name) { msg.textContent = "Give them a name."; return; }
+      if (!name) { msg.textContent = "Give them a full name."; return; }
+      if (!memberNumber) { msg.textContent = "Give them a member number."; return; }
       if (!phone) { msg.textContent = "That doesn't look like a phone number."; return; }
       try {
         await db.collection(MEMBERS).doc(phone).set(
-          { name, addedByStaff: true, updatedAt: Date.now() }, { merge: true });
+          { name, memberNumber, addedByStaff: true, updatedAt: Date.now() }, { merge: true });
         msg.className = "msg ok";
         msg.textContent = name + " added. They can sign in with that number.";
         $("newMemberName").value = "";
+        $("newMemberNo").value = "";
         $("newMemberPhone").value = "";
       } catch (err) {
         console.error("addMember", err);
@@ -711,13 +874,28 @@
           members = {};
           snap.docs.forEach(d => { members[d.id] = d.data(); });
         }, err => console.error("members listener", err));
+        staffSub = db.collection(STAFF).onSnapshot(snap => {
+          staffRoster = snap.docs.map(d => ({ phone: d.id, name: (d.data() || {}).name || d.id }));
+          render();
+        }, err => console.error("staff listener", err));
       }
     }
     function stopData() {
       if (ordersSub) { ordersSub(); ordersSub = null; }
       if (membersSub) { membersSub(); membersSub = null; }
+      if (staffSub) { staffSub(); staffSub = null; }
       orders = [];
       members = {};
+      staffRoster = [];
+    }
+
+    // Whoever is signed in always appears, so the picker works before the
+    // roster has arrived and on the first racket of a fresh install.
+    function staffNames() {
+      const names = staffRoster.map(s => s.name).filter(Boolean);
+      const me = currentUser && currentUser.name;
+      if (me && !names.includes(me)) names.unshift(me);
+      return names.length ? names.sort() : (me ? [me] : []);
     }
 
     function setDefaultDropOff() {
@@ -836,31 +1014,34 @@
     // Asked once, the first time somebody signs in without a name already on
     // record. Without it their rackets reach the bench labelled with a phone
     // number, which tells whoever is stringing nothing.
-    function showNameStep(current) {
+    function showNameStep(name, memberNumber) {
       $("loginScreen").classList.add("show");
       $("phoneStep").hidden = true;
       $("codeStep").hidden = true;
       $("nameStep").hidden = false;
-      $("loginSub").textContent = "What name should we put on your rackets?";
-      $("loginName").value = current || "";
-      $("loginName").focus();
+      $("loginSub").textContent = "What should we put on your rackets?";
+      $("loginName").value = name || "";
+      $("loginMemberNo").value = memberNumber || "";
+      (name ? $("loginMemberNo") : $("loginName")).focus();
     }
 
     async function saveName(e) {
       if (e) e.preventDefault();
       const name = $("loginName").value.trim();
-      if (!name) { loginError("Enter a name so we know whose racket it is."); return; }
+      const memberNumber = $("loginMemberNo").value.trim();
+      if (!name) { loginError("Enter your full name so we know whose racket it is."); return; }
+      if (!memberNumber) { loginError("Enter your member number."); return; }
       if (!auth || !auth.currentUser) { loginError("Sign in again to set your name."); return; }
       const phone = auth.currentUser.phoneNumber;
       $("nameSave").disabled = true;
       try {
         await db.collection(MEMBERS).doc(phone).set(
-          { name, addedByStaff: false, updatedAt: Date.now() }, { merge: true });
+          { name, memberNumber, addedByStaff: false, updatedAt: Date.now() }, { merge: true });
         loginError("");
-        // Orders already placed carry the name they were placed under, so
-        // bring those along rather than leaving a phone number on the bench.
-        if (currentUser) currentUser.name = name;
-        await renameMyOrders(phone, name);
+        // Orders already placed carry the details they were placed under, so
+        // bring those along rather than leaving stale ones in the queue.
+        if (currentUser) { currentUser.name = name; currentUser.memberNumber = memberNumber; }
+        await relabelMyOrders(phone, name, memberNumber);
         await handleAuth(auth.currentUser);
       } catch (err) {
         console.error("saveName", err);
@@ -870,11 +1051,12 @@
       }
     }
 
-    async function renameMyOrders(phone, name) {
-      const mine = orders.filter(o => o.memberPhone === phone && o.memberName !== name);
+    async function relabelMyOrders(phone, name, memberNumber) {
+      const mine = orders.filter(o => o.memberPhone === phone &&
+        (o.memberName !== name || o.memberNumber !== memberNumber));
       for (const o of mine) {
-        try { await db.collection(ORDERS).doc(o.id).update({ memberName: name }); }
-        catch (err) { console.error("rename order", err); }
+        try { await db.collection(ORDERS).doc(o.id).update({ memberName: name, memberNumber }); }
+        catch (err) { console.error("relabel order", err); }
       }
     }
 
@@ -954,7 +1136,7 @@
       // Anyone who got in on this device goes straight back in; the checks
       // below run behind that and have the last word.
       if (saved && saved.phone === phone && !currentUser) {
-        currentUser = { name: saved.name, phone };
+        currentUser = { name: saved.name, phone, memberNumber: saved.memberNumber || "" };
         isStaff = Boolean(saved.staff);
         showApp();
         startData();
@@ -981,15 +1163,17 @@
       recheckAttempts = 0;
 
       isStaff = staffDoc.exists;
-      const name = (((staffDoc.exists && (staffDoc.data() || {}).name) ||
-                     (memberDoc.exists && (memberDoc.data() || {}).name) || "") + "").trim();
+      const member = memberDoc.exists ? (memberDoc.data() || {}) : {};
+      const name = (((staffDoc.exists && (staffDoc.data() || {}).name) || member.name || "") + "").trim();
+      const memberNumber = ((member.memberNumber || "") + "").trim();
 
       // Nobody knows who this is yet — a first sign-in that staff hadn't
       // already added. Ask before letting them order, so their rackets don't
-      // arrive labelled with a phone number.
-      if (!name) { showNameStep(); return; }
+      // arrive labelled with a phone number. Stringers are identified by the
+      // staff list and don't carry a member number.
+      if (!name || (!isStaff && !memberNumber)) { showNameStep(name, memberNumber); return; }
 
-      currentUser = { name, phone };
+      currentUser = { name, phone, memberNumber };
       remember(currentUser, isStaff);
       noteSessionStart();
       if (isStaff && view === "member") view = "staff";
@@ -1125,10 +1309,11 @@
     $("sessionName").addEventListener("click", () => {
       if (!currentUser) return;
       loginError("");
-      showNameStep(currentUser.name);
+      showNameStep(currentUser.name, currentUser.memberNumber);
     });
     $("orderForm").addEventListener("submit", submitOrder);
     $("addMemberBtn").addEventListener("click", addMember);
+    $("pastSearch").addEventListener("input", renderStaffPast);
     $("staffFilters").addEventListener("click", e => {
       const b = e.target.closest("button");
       if (!b) return;
@@ -1168,37 +1353,55 @@
           "+15550000003": { name: "Lou" }
         },
         stringing_members: {
-          [DEMO_MEMBER]: { name: "Jordan Vega" },
-          "+15550000004": { name: "Priya Raman" },
-          "+15550000005": { name: "Marcus Hill" }
+          [DEMO_MEMBER]: { name: "Jordan Vega", memberNumber: "1042" },
+          "+15550000004": { name: "Priya Raman", memberNumber: "0871" },
+          "+15550000005": { name: "Marcus Hill", memberNumber: "1198" }
         },
         stringing_orders: {
           d1: { id: "d1", memberPhone: DEMO_MEMBER, memberName: "Jordan Vega",
+                memberNumber: "1042",
                 racket: "Wilson Blade 98", stringName: "Luxilon ALU Power 16L",
                 tension: 54, tensionCross: 52, dropOffDate: ymd(new Date(now + day)),
+                dropOffSlot: "am",
                 notes: "grommet looks cracked near 3 o'clock", status: "requested",
                 createdAt: now - 2 * hr, startedAt: null, startedByName: null,
-                finishedAt: null, strungByName: null, notifiedAt: null },
+                finishedAt: null, strungByName: null, actualString: null,
+                actualTension: null, actualTensionCross: null, chargedByName: null,
+                notifiedAt: null },
           d2: { id: "d2", memberPhone: "+15550000004", memberName: "Priya Raman",
+                memberNumber: "0871",
                 racket: "Babolat Pure Aero", stringName: "RPM Blast 17",
                 tension: 52, tensionCross: null, dropOffDate: ymd(new Date(now)),
+                dropOffSlot: "pm",
                 notes: "", status: "in_progress",
                 createdAt: now - 26 * hr, startedAt: now - hr, startedByName: "Anjali",
-                finishedAt: null, strungByName: null, notifiedAt: null },
+                finishedAt: null, strungByName: null, actualString: null,
+                actualTension: null, actualTensionCross: null, chargedByName: null,
+                notifiedAt: null },
+          // Strung with something other than what was asked for, which is the
+          // case the log exists to record.
           d3: { id: "d3", memberPhone: "+15550000005", memberName: "Marcus Hill",
+                memberNumber: "1198",
                 racket: "Head Speed MP", stringName: "Solinco Hyper-G 16L",
                 tension: 50, tensionCross: 48, dropOffDate: ymd(new Date(now - 2 * day)),
+                dropOffSlot: "am",
                 notes: "", status: "finished",
                 createdAt: now - 3 * day, startedAt: now - 2 * day,
                 startedByName: "Lou", finishedAt: now - 2 * day + hr,
-                strungByName: "Lou", notifiedAt: now - 2 * day + hr },
+                strungByName: "Lou", actualString: "Solinco Tour Bite 16L",
+                actualTension: 50, actualTensionCross: 48, chargedByName: "Anjali",
+                notifiedAt: now - 2 * day + hr },
           d4: { id: "d4", memberPhone: DEMO_MEMBER, memberName: "Jordan Vega",
+                memberNumber: "1042",
                 racket: "Wilson Blade 98", stringName: "Head Lynx Tour 17",
                 tension: 55, tensionCross: null, dropOffDate: ymd(new Date(now - 20 * day)),
+                dropOffSlot: "pm",
                 notes: "", status: "finished",
                 createdAt: now - 21 * day, startedAt: now - 20 * day,
                 startedByName: "Anjali", finishedAt: now - 20 * day + 2 * hr,
-                strungByName: "Anjali", notifiedAt: now - 20 * day + 2 * hr }
+                strungByName: "Anjali", actualString: "Head Lynx Tour 17",
+                actualTension: 55, actualTensionCross: null, chargedByName: "Lou",
+                notifiedAt: now - 20 * day + 2 * hr }
         }
       };
     }

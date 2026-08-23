@@ -63,7 +63,12 @@ service cloud.firestore {
     // collection, or write to it from the app.
     match /stringing_staff/{phone} {
       allow get: if signedIn() && callerPhone() == phone;
-      allow list, write: if false;
+      // Staff may read the roster, which is what fills the "charged by" picker
+      // with real names instead of a text box that collects typos. Members
+      // still can't see who the stringers are, and nobody writes it from the
+      // app — the list stays the console's to keep.
+      allow list: if isStaff();
+      allow write: if false;
     }
 
     // A member record holds the name orders are labelled with. Members create
