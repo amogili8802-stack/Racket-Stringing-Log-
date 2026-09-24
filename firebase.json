@@ -3,6 +3,6 @@
   "functions": [{ "source": "functions", "codebase": "default" }],
   "hosting": {
     "public": ".",
-    "ignore": ["firebase.json", "functions/**", "**/.*", "**/node_modules/**"]
+    "ignore": ["firebase.json", "firestore.rules", "README.md", "functions/**", "**/.*", "**/node_modules/**"]
   }
 }
