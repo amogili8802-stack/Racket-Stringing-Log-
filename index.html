@@ -3,104 +3,175 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LAGCC Racket Stringing</title>
+  <title>The Stringing Room · LAGCC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,650;1,9..144,400&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <style>
+    /* Cream and green, like the clinic sign-up site, but deliberately not the
+       same: a dark green masthead instead of a white one, a clay accent
+       instead of gold, and no script wordmark. A coach flipping between the
+       two tabs should never have to read the page to know which one it is. */
     :root {
-      --bg: #f3eee4;
-      --surface: #fffdf9;
-      --text: #4b3528;
-      --muted: #756659;
-      --border: #cdbfae;
-      --line: #d9c99c;
-      --waiting: #8a7a5c;
-      --bench: #9a6b3f;
-      --ready: #4f7350;
-      --danger: #b3261e;
-      --tint: #f9f5ed;
+      --bg: #f2ede1;
+      --surface: #fffdf8;
+      --tint: #f8f4ea;
+      --text: #1f2a24;
+      --muted: #6b6a5f;
+      --border: #e1d9c6;
+      --line: #d6ccb4;
+      --green: #1f4a3a;
+      --green-deep: #173a2d;
+      --green-soft: #e3ebe3;
+      --clay: #b4623b;
+      --clay-soft: #f6e6db;
+      --waiting: #8c8677;
+      --bench: #b4623b;
+      --ready: #2f6b4f;
+      --danger: #a8321f;
+      --serif: Fraunces, "Iowan Old Style", Georgia, serif;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: Manrope, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: var(--bg);
       color: var(--text);
       -webkit-text-size-adjust: 100%;
     }
-    .page { max-width: 880px; margin: 0 auto; padding: 30px 20px 60px; }
+    .page { max-width: 860px; margin: 0 auto; padding: 26px 20px 60px; }
 
-    h1 { margin: 0 0 4px; font-size: 30px; font-weight: 800; text-align: center; }
-    .sub { margin: 0 0 20px; text-align: center; color: var(--muted); font-size: 14px; font-weight: 600; }
+    /* ---------- masthead ---------- */
+    .masthead {
+      background: var(--green);
+      color: #f4efe2;
+      border-bottom: 3px solid var(--clay);
+    }
+    .masthead-inner {
+      max-width: 860px; margin: 0 auto;
+      padding: 18px 20px;
+      display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand svg { flex: none; }
+    .brand-name {
+      margin: 0;
+      font-family: var(--serif); font-weight: 650;
+      font-size: 26px; letter-spacing: -.01em; line-height: 1.05;
+    }
+    .brand-kicker {
+      display: block;
+      font-family: Manrope, sans-serif;
+      font-size: 10.5px; font-weight: 800; letter-spacing: .18em;
+      text-transform: uppercase; color: #d9c7a4;
+      margin-bottom: 3px;
+    }
+
+    h1 { margin: 0 0 4px; font-family: var(--serif); font-size: 30px; font-weight: 650; text-align: center; }
+    .sub {
+      margin: 0 0 22px; text-align: center; color: var(--muted);
+      font-family: var(--serif); font-style: italic; font-size: 17px; font-weight: 400;
+    }
 
     /* ---------- session pill ---------- */
     .session {
       display: none;
       align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 16px;
+      gap: 12px;
       font-size: 13px;
-      font-weight: 650;
-      color: var(--muted);
+      font-weight: 600;
+      color: #cfdccf;
     }
     .session.show { display: flex; }
-    .session .who { color: var(--text); }
+    .session .who {
+      color: #f4efe2; text-decoration: none;
+      border: 1px solid rgba(244,239,226,.35); border-radius: 999px;
+      padding: 5px 12px;
+    }
+    .role-tag {
+      font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+      background: var(--clay); color: #fff; border-radius: 999px; padding: 4px 9px;
+    }
     .linkish {
       border: 0; background: none; padding: 0;
-      font: inherit; color: var(--muted);
+      font: inherit; color: inherit;
       text-decoration: underline; cursor: pointer;
     }
 
     /* ---------- view switch ---------- */
-    .switch { display: none; gap: 6px; justify-content: center; margin-bottom: 22px; }
+    .switch {
+      display: none; gap: 4px; justify-content: center;
+      width: fit-content; margin: 0 auto 24px;
+      padding: 4px; border-radius: 999px;
+      background: var(--surface); border: 1px solid var(--border);
+    }
     .switch.show { display: flex; }
     .switch button {
-      height: 38px; padding: 0 16px;
-      border: 1px solid var(--border); border-radius: 9px;
-      background: var(--surface); color: var(--text);
-      font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+      height: 36px; padding: 0 18px;
+      border: 0; border-radius: 999px;
+      background: transparent; color: var(--text);
+      font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer;
     }
-    .switch button.active { background: #e8d8c4; }
+    .switch button.active { background: var(--green); color: #fff; }
 
     /* ---------- cards ---------- */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 18px;
-      margin-bottom: 16px;
-      box-shadow: 0 6px 18px rgba(75,53,40,.06);
+      border-radius: 16px;
+      padding: 22px;
+      margin-bottom: 18px;
+      box-shadow: 0 1px 2px rgba(31,42,36,.04), 0 8px 24px rgba(31,42,36,.05);
     }
-    .card h2 { margin: 0 0 14px; font-size: 17px; font-weight: 750; }
+    .card h2 {
+      margin: 0 0 16px;
+      font-family: var(--serif); font-size: 21px; font-weight: 650; letter-spacing: -.005em;
+    }
+    .card-lede { margin: -10px 0 16px; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
 
-    label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 650; }
+    .section-title {
+      display: flex; align-items: center; gap: 12px;
+      margin: 6px 0 12px;
+      font-family: var(--serif); font-size: 15px; font-weight: 500; color: var(--muted);
+    }
+    .section-title::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+    label { display: block; margin-bottom: 6px; font-size: 12.5px; font-weight: 700; letter-spacing: .01em; }
+    .opt { font-weight: 500; color: var(--muted); }
     input, select, textarea {
       width: 100%;
-      padding: 10px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
       font-family: inherit;
-      font-size: 15px;   /* 16px-ish keeps iOS from zooming the page on focus */
+      font-size: 16px;   /* 16px keeps iOS from zooming the page on focus */
       background: #fff;
       color: var(--text);
     }
+    input:focus, select:focus, textarea:focus {
+      outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(31,74,58,.14);
+    }
     textarea { min-height: 64px; resize: vertical; }
-    .field { margin-bottom: 13px; }
-    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+    .field { margin-bottom: 14px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .grid3 { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 14px; }
 
     button.primary {
-      width: 100%; height: 46px;
-      border: 0; border-radius: 9px;
-      background: var(--text); color: #fff;
+      width: 100%; height: 48px;
+      border: 0; border-radius: 999px;
+      background: var(--green); color: #fff;
       font: inherit; font-size: 15px; font-weight: 750; cursor: pointer;
     }
+    button.primary:hover { background: var(--green-deep); }
     button.primary:disabled { opacity: .5; cursor: default; }
     button.secondary {
-      height: 40px; padding: 0 14px;
-      border: 1px solid var(--border); border-radius: 8px;
+      height: 38px; padding: 0 16px;
+      border: 1px solid var(--line); border-radius: 999px;
       background: var(--surface); color: var(--text);
       font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
     }
-    button.go { background: var(--ready); border-color: var(--ready); color: #fff; }
+    button.go { background: var(--green); border-color: var(--green); color: #fff; }
+    button.clay { background: var(--clay); border-color: var(--clay); color: #fff; }
     button.warn { color: var(--danger); }
 
     .msg { margin-top: 10px; font-size: 13px; font-weight: 650; }
@@ -111,61 +182,107 @@
     .orders { margin-top: 4px; }
     .order {
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
-      margin-bottom: 11px;
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 12px;
       background: var(--tint);
     }
-    .order-top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 7px; }
-    .order-racket { font-size: 15px; font-weight: 750; }
+    .order-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+    .order-racket { font-family: var(--serif); font-size: 18px; font-weight: 650; }
     .badge {
-      font-size: 11px; font-weight: 750; letter-spacing: .03em;
-      text-transform: uppercase;
-      padding: 3px 8px; border-radius: 20px;
+      font-size: 11.5px; font-weight: 700;
+      padding: 4px 11px; border-radius: 999px;
       color: #fff; white-space: nowrap;
     }
     .badge.requested { background: var(--waiting); }
     .badge.in_progress { background: var(--bench); }
     .badge.finished { background: var(--ready); }
-    .order-line { font-size: 13.5px; color: var(--muted); margin-top: 3px; }
+    .order-line { font-size: 13.5px; color: var(--muted); margin-top: 3px; line-height: 1.45; }
     .order-line b { color: var(--text); font-weight: 700; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .chip {
+      font-size: 12px; font-weight: 700;
+      padding: 3px 10px; border-radius: 999px;
+      background: var(--green-soft); color: var(--green);
+    }
+    .chip.clay { background: var(--clay-soft); color: #8a4424; }
+    .chip.urgent { background: var(--clay); color: #fff; }
     .order-note {
-      margin-top: 8px; padding: 8px 10px;
-      background: #fff; border: 1px solid var(--border); border-radius: 7px;
+      margin-top: 10px; padding: 9px 12px;
+      background: #fff; border: 1px solid var(--border); border-radius: 10px;
       font-size: 13px;
     }
-    .order-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .order-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
     .finish-panel {
-      margin-top: 11px; padding: 11px;
-      background: #fff; border: 1px solid var(--border); border-radius: 8px;
+      margin-top: 12px; padding: 12px;
+      background: #fff; border: 1px solid var(--border); border-radius: 12px;
     }
     .finish-title { font-size: 12px; font-weight: 750; margin-bottom: 8px; color: var(--muted); }
     .finish-row { display: flex; gap: 7px; align-items: center; margin-bottom: 7px; }
     .finish-row:last-child { margin-bottom: 0; }
-    .finish-row input, .finish-row select { padding: 8px; font-size: 14px; }
+    .finish-row input, .finish-row select { padding: 8px 10px; font-size: 14px; }
     .finish-row input:first-child { flex: 2 1 40%; }
     .finish-row input + input { flex: 1 1 22%; min-width: 74px; }
     .finish-label { font-size: 12.5px; font-weight: 650; color: var(--muted); white-space: nowrap; }
 
-    .empty { padding: 18px 2px; color: var(--muted); font-size: 14px; font-weight: 600; text-align: center; }
+    /* ---------- status tracker ---------- */
+    /* What a player actually came to look at: where their racket is. Three
+       stops, the current one filled, so it reads at a glance on a phone. */
+    .steps {
+      list-style: none; margin: 12px 0 2px; padding: 0;
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      position: relative;
+    }
+    .steps li {
+      position: relative; text-align: center;
+      font-size: 12px; font-weight: 700; color: var(--muted);
+      padding-top: 22px;
+    }
+    .steps li::before {
+      content: ""; position: absolute; top: 0; left: 50%;
+      width: 14px; height: 14px; margin-left: -7px;
+      border-radius: 50%; background: #fff; border: 2px solid var(--line);
+      z-index: 1;
+    }
+    .steps li + li::after {
+      content: ""; position: absolute; top: 7px; right: 50%;
+      width: 100%; height: 2px; background: var(--line); margin-top: -1px;
+    }
+    .steps li.done::before { background: var(--green); border-color: var(--green); }
+    .steps li.done + li.done::after, .steps li.done + li.now::after { background: var(--green); }
+    .steps li.now { color: var(--text); }
+    .steps li.now::before { border-color: var(--clay); background: var(--clay); box-shadow: 0 0 0 4px var(--clay-soft); }
+    .steps li.now.last::before { border-color: var(--green); background: var(--green); box-shadow: 0 0 0 4px var(--green-soft); }
+
+    .empty { padding: 20px 2px; color: var(--muted); font-family: var(--serif); font-style: italic; font-size: 15px; text-align: center; }
     .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
     .filters button {
-      height: 34px; padding: 0 12px;
-      border: 1px solid var(--border); border-radius: 8px;
+      height: 32px; padding: 0 14px;
+      border: 1px solid var(--line); border-radius: 999px;
       background: var(--surface); color: var(--text);
       font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer;
     }
-    .filters button.active { background: #e8d8c4; }
+    .filters button.active { background: var(--green); border-color: var(--green); color: #fff; }
     .count { color: var(--muted); font-weight: 650; }
 
     details.adder summary {
-      cursor: pointer; font-size: 14px; font-weight: 700;
-      padding: 4px 0; list-style: none;
+      cursor: pointer; list-style: none;
+      display: flex; align-items: center; gap: 10px;
+      font-family: var(--serif); font-size: 19px; font-weight: 650;
     }
     details.adder summary::-webkit-details-marker { display: none; }
-    details.adder summary::before { content: "+ "; }
-    details.adder[open] summary::before { content: "− "; }
-    details.adder .body { padding-top: 12px; }
+    details.adder summary::before {
+      content: "+"; flex: none;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--clay); color: #fff;
+      font-family: Manrope, sans-serif; font-size: 17px; font-weight: 700;
+    }
+    details.adder[open] summary::before { content: "−"; }
+    details.adder summary .hint { font-family: Manrope, sans-serif; font-size: 13px; font-weight: 500; color: var(--muted); }
+    details.adder .body { padding-top: 16px; }
+    details.adder.quiet summary { font-size: 16px; }
+    details.adder.quiet summary::before { background: var(--green-soft); color: var(--green); }
 
     /* ---------- pierce ---------- */
     .pierce {
@@ -175,8 +292,8 @@
       align-content: center; justify-content: center;
       gap: 0 18px;
       overflow: hidden;
-      background: rgba(63, 49, 40, .93);
-      color: #f6efe4;
+      background: rgba(23, 58, 45, .93);
+      color: #f4efe2;
       font-size: clamp(28px, 7vw, 64px);
       font-weight: 800;
       letter-spacing: -.02em;
@@ -204,19 +321,20 @@
     .demo-bar {
       display: none;
       align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
-      padding: 9px 14px; margin-bottom: 18px;
-      background: #3f3128; color: #f6efe4;
-      border-radius: 10px;
+      padding: 9px 14px; margin-bottom: 20px;
+      background: var(--clay-soft); color: #6d3519;
+      border: 1px dashed var(--clay);
+      border-radius: 12px;
       font-size: 12.5px; font-weight: 650;
     }
     .demo-bar.show { display: flex; }
     .demo-bar button {
-      height: 30px; padding: 0 11px;
-      border: 1px solid rgba(255,255,255,.35); border-radius: 7px;
+      height: 30px; padding: 0 12px;
+      border: 1px solid var(--clay); border-radius: 999px;
       background: transparent; color: inherit;
       font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
     }
-    .demo-bar button.active { background: #f6efe4; color: #3f3128; border-color: #f6efe4; }
+    .demo-bar button.active { background: var(--clay); color: #fff; }
 
     /* ---------- login ---------- */
     .login {
@@ -228,23 +346,28 @@
     }
     .login.show { display: flex; }
     .login-card {
-      width: 100%; max-width: 380px;
+      width: 100%; max-width: 390px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 32px 30px 24px;
-      box-shadow: 0 10px 30px rgba(75,53,40,.10);
+      border-top: 5px solid var(--green);
+      border-radius: 16px;
+      padding: 30px 30px 24px;
+      box-shadow: 0 12px 34px rgba(31,42,36,.10);
     }
-    .login-card h1 { font-size: 24px; margin-bottom: 6px; }
+    .login-card .brand { justify-content: center; margin-bottom: 14px; color: var(--green); }
+    .login-card h1 { font-size: 26px; margin-bottom: 4px; }
     .login-note { margin-top: 16px; font-size: 12px; color: var(--muted); text-align: center; line-height: 1.5; }
     .login-build { margin-top: 10px; text-align: center; font-size: 11px; color: var(--muted); opacity: .7; }
     .login-back { width: 100%; margin-top: 10px; background: none; border: 0; color: var(--muted); font: inherit; font-size: 13px; text-decoration: underline; cursor: pointer; }
 
     @media (max-width: 560px) {
-      .page { padding: 22px 14px 48px; }
-      h1 { font-size: 25px; }
-      .grid2 { grid-template-columns: 1fr; }
+      .page { padding: 20px 14px 48px; }
+      .masthead-inner { padding: 14px; }
+      .brand-name { font-size: 22px; }
+      .card { padding: 18px 16px; }
+      .grid2, .grid3 { grid-template-columns: 1fr; }
       .order-actions button { flex: 1 1 auto; min-height: 44px; }
+      .switch { width: 100%; }
       .switch button { flex: 1; }
     }
   </style>
@@ -256,21 +379,36 @@
 
   <div class="pierce" id="pierceOverlay" aria-hidden="true"></div>
 
+  <header class="masthead">
+    <div class="masthead-inner">
+      <div class="brand">
+        <svg width="34" height="34" viewBox="0 0 34 34" fill="none" aria-hidden="true">
+          <ellipse cx="14" cy="13" rx="9.5" ry="11" transform="rotate(-35 14 13)" stroke="currentColor" stroke-width="2.2"/>
+          <path d="M8 8.5l12 9M6.5 13l10 7.5M11 5.5l11 8M8.5 18.5l12-9.5M6.8 13.5l10.6-8.3M12 21l9-7" stroke="currentColor" stroke-width="1" opacity=".6"/>
+          <path d="M20.5 20.5l8.5 8.5" stroke="#b4623b" stroke-width="3.4" stroke-linecap="round"/>
+        </svg>
+        <div>
+          <span class="brand-kicker" id="tagline">LAGCC</span>
+          <p class="brand-name">The Stringing Room</p>
+        </div>
+      </div>
+      <div class="session" id="session">
+        <span class="role-tag" id="roleTag" hidden>Coach</span>
+        <button type="button" class="linkish who" id="sessionName" title="Change your name"></button>
+        <button type="button" class="linkish" id="logoutBtn">Log out</button>
+      </div>
+    </div>
+  </header>
+
   <div class="page">
     <div class="demo-bar" id="demoBar">
-      <span>Demo — sample data, nothing saved</span>
-      <button type="button" data-as="member" id="demoMember">View as member</button>
-      <button type="button" data-as="staff" id="demoStaff">View as stringer</button>
+      <span>Demo: sample data, nothing saved, no texts sent</span>
+      <button type="button" data-as="member" id="demoMember">View as player</button>
+      <button type="button" data-as="staff" id="demoStaff">View as coach</button>
       <button type="button" id="demoReset">Reset data</button>
     </div>
 
-    <h1>Racket Stringing</h1>
-    <p class="sub" id="tagline">LAGCC</p>
-
-    <div class="session" id="session">
-      <span>Signed in as <button type="button" class="linkish who" id="sessionName" title="Change your name"></button></span>
-      <button type="button" class="linkish" id="logoutBtn">Log out</button>
-    </div>
+    <p class="sub" id="pageSub">Drop it off, follow along, we'll text you when it's ready.</p>
 
     <div class="switch" id="viewSwitch">
       <button type="button" data-view="staff" id="tabStaff">Stringing queue</button>
@@ -280,35 +418,40 @@
     <!-- ============ MEMBER ============ -->
     <section id="memberView" hidden>
       <div class="card">
+        <h2>My rackets</h2>
+        <div class="orders" id="myOrders"></div>
+      </div>
+
+      <div class="card">
         <h2>Request a stringing</h2>
         <form id="orderForm" novalidate>
           <div class="field">
             <label for="racket">Racket</label>
-            <input type="text" id="racket" maxlength="60" placeholder="e.g. Wilson Blade 98" />
+            <input type="text" id="racket" maxlength="60" list="commonRackets" placeholder="e.g. Wilson Blade 98" />
           </div>
           <div class="field">
             <label for="stringName">String</label>
             <input type="text" id="stringName" maxlength="60" list="commonStrings" placeholder="e.g. Luxilon ALU Power 16L" />
-            <datalist id="commonStrings">
-              <option value="Luxilon ALU Power 16L"></option>
-              <option value="Babolat RPM Blast 17"></option>
-              <option value="Solinco Hyper-G 16L"></option>
-              <option value="Wilson NXT 16"></option>
-              <option value="Head Lynx Tour 17"></option>
-              <option value="Natural gut 16"></option>
-            </datalist>
           </div>
-          <div class="grid2">
+          <div class="grid3">
             <div class="field">
-              <label for="tension">Tension — mains (lbs)</label>
+              <label for="grip">Grip change</label>
+              <select id="grip">
+                <option value="none">No grip change</option>
+                <option value="overgrip">New overgrip</option>
+                <option value="replacement">New replacement grip</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tension">Tension, mains (lbs)</label>
               <input type="number" id="tension" inputmode="numeric" min="30" max="75" placeholder="55" />
             </div>
             <div class="field">
-              <label for="tensionCross">Crosses (lbs)</label>
-              <input type="number" id="tensionCross" inputmode="numeric" min="30" max="75" placeholder="same as mains" />
+              <label for="tensionCross">Crosses <span class="opt">(lbs)</span></label>
+              <input type="number" id="tensionCross" inputmode="numeric" min="30" max="75" placeholder="same" />
             </div>
           </div>
-          <div class="grid2">
+          <div class="grid3">
             <div class="field">
               <label for="dropOff">Day you'll drop it off</label>
               <input type="date" id="dropOff" />
@@ -320,19 +463,18 @@
                 <option value="pm">12pm – 4pm</option>
               </select>
             </div>
+            <div class="field">
+              <label for="neededBy">Need it by <span class="opt">(optional)</span></label>
+              <input type="date" id="neededBy" />
+            </div>
           </div>
           <div class="field">
-            <label for="notes">Anything else (optional)</label>
-            <textarea id="notes" maxlength="300" placeholder="e.g. grommet looks cracked near 3 o'clock"></textarea>
+            <label for="notes">Anything else <span class="opt">(optional)</span></label>
+            <textarea id="notes" maxlength="300" placeholder="e.g. grip color, a cracked grommet near 3 o'clock, match on Saturday"></textarea>
           </div>
           <button type="submit" class="primary" id="orderSubmit">Send request</button>
           <div class="msg" id="orderMsg"></div>
         </form>
-      </div>
-
-      <div class="card">
-        <h2>My rackets</h2>
-        <div class="orders" id="myOrders"></div>
       </div>
 
       <div class="card">
@@ -344,32 +486,96 @@
     <!-- ============ STAFF ============ -->
     <section id="staffView" hidden>
       <div class="card">
+        <details class="adder" id="walkInAdder">
+          <summary>Enter a racket <span class="hint">for a player who handed it to you</span></summary>
+          <div class="body">
+            <form id="walkInForm" novalidate>
+              <div class="section-title">Player</div>
+              <div class="grid3">
+                <div class="field">
+                  <label for="wPhone">Mobile number</label>
+                  <input type="tel" id="wPhone" maxlength="20" placeholder="(555) 123-4567" />
+                </div>
+                <div class="field">
+                  <label for="wName">Full name</label>
+                  <input type="text" id="wName" maxlength="60" list="memberNames" placeholder="Jordan Vega" />
+                </div>
+                <div class="field">
+                  <label for="wMemberNo">Member # <span class="opt">(optional)</span></label>
+                  <input type="text" id="wMemberNo" maxlength="20" placeholder="1042" />
+                </div>
+              </div>
+              <div class="section-title">Racket</div>
+              <div class="grid2">
+                <div class="field">
+                  <label for="wRacket">Racket</label>
+                  <input type="text" id="wRacket" maxlength="60" list="commonRackets" placeholder="e.g. Wilson Blade 98" />
+                </div>
+                <div class="field">
+                  <label for="wString">String</label>
+                  <input type="text" id="wString" maxlength="60" list="commonStrings" placeholder="e.g. Luxilon ALU Power 16L" />
+                </div>
+              </div>
+              <div class="grid3">
+                <div class="field">
+                  <label for="wGrip">Grip change</label>
+                  <select id="wGrip">
+                    <option value="none">No grip change</option>
+                    <option value="overgrip">New overgrip</option>
+                    <option value="replacement">New replacement grip</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="wTension">Mains (lbs)</label>
+                  <input type="number" id="wTension" inputmode="numeric" min="30" max="75" placeholder="55" />
+                </div>
+                <div class="field">
+                  <label for="wTensionCross">Crosses <span class="opt">(lbs)</span></label>
+                  <input type="number" id="wTensionCross" inputmode="numeric" min="30" max="75" placeholder="same" />
+                </div>
+              </div>
+              <div class="grid2">
+                <div class="field">
+                  <label for="wNeededBy">Need it by <span class="opt">(optional)</span></label>
+                  <input type="date" id="wNeededBy" />
+                </div>
+                <div class="field">
+                  <label for="wNotes">Notes <span class="opt">(optional)</span></label>
+                  <input type="text" id="wNotes" maxlength="300" placeholder="e.g. black overgrip" />
+                </div>
+              </div>
+              <button type="submit" class="primary" id="walkInSubmit">Add to the queue</button>
+              <div class="msg" id="walkInMsg"></div>
+            </form>
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
         <h2>Stringing queue</h2>
         <div class="filters" id="staffFilters">
-          <button type="button" data-filter="active" class="active">On now</button>
-          <button type="button" data-filter="requested">Waiting</button>
+          <button type="button" data-filter="active" class="active">All open</button>
+          <button type="button" data-filter="requested">Not started</button>
           <button type="button" data-filter="in_progress">In progress</button>
         </div>
         <div class="orders" id="staffOrders"></div>
       </div>
 
       <div class="card">
-        <h2>Past orders</h2>
-        <p class="order-line" style="margin:-8px 0 12px;">
-          Every racket anyone has finished, newest first.
-        </p>
+        <h2>Finished</h2>
+        <p class="card-lede">Every racket anyone has finished, newest first.</p>
         <div class="field" style="margin-bottom:12px;">
-          <input type="search" id="pastSearch" placeholder="Search by member, number, racket or string" />
+          <input type="search" id="pastSearch" placeholder="Search by player, number, racket or string" />
         </div>
         <div class="orders" id="staffPastOrders"></div>
       </div>
 
       <div class="card">
-        <details class="adder" id="memberAdder">
-          <summary>Add a member</summary>
+        <details class="adder quiet" id="memberAdder">
+          <summary>Add a player</summary>
           <div class="body">
-            <p class="order-line" style="margin-bottom:12px;">
-              Members can sign in and order without being added — this is for
+            <p class="card-lede" style="margin-top:0;">
+              Players can sign in and order without being added. This is for
               getting someone's name right before their first visit.
             </p>
             <div class="grid2">
@@ -386,17 +592,42 @@
               <label for="newMemberPhone">Phone</label>
               <input type="tel" id="newMemberPhone" maxlength="20" placeholder="(555) 123-4567" />
             </div>
-            <button type="button" class="primary" id="addMemberBtn">Add member</button>
+            <button type="button" class="primary" id="addMemberBtn">Add player</button>
             <div class="msg" id="addMemberMsg"></div>
           </div>
         </details>
       </div>
     </section>
+
+    <datalist id="commonStrings">
+      <option value="Luxilon ALU Power 16L"></option>
+      <option value="Babolat RPM Blast 17"></option>
+      <option value="Solinco Hyper-G 16L"></option>
+      <option value="Wilson NXT 16"></option>
+      <option value="Head Lynx Tour 17"></option>
+      <option value="Tecnifibre X-One Biphase 16"></option>
+      <option value="Natural gut 16"></option>
+    </datalist>
+    <datalist id="commonRackets">
+      <option value="Wilson Blade 98"></option>
+      <option value="Wilson Pro Staff 97"></option>
+      <option value="Wilson Clash 100"></option>
+      <option value="Babolat Pure Drive"></option>
+      <option value="Babolat Pure Aero"></option>
+      <option value="Head Speed MP"></option>
+      <option value="Head Radical MP"></option>
+      <option value="Yonex EZONE 100"></option>
+      <option value="Yonex VCORE 98"></option>
+    </datalist>
+    <datalist id="memberNames"></datalist>
   </div>
 
   <!-- ============ LOGIN ============ -->
   <div class="login" id="loginScreen">
     <div class="login-card">
+      <div class="brand">
+        <span class="brand-name">The Stringing Room</span>
+      </div>
       <h1>Sign in</h1>
       <p class="sub" id="loginSub">We'll text you a code.</p>
       <div class="msg err" id="loginError"></div>
@@ -430,7 +661,7 @@
         <button type="submit" class="primary" id="nameSave">Continue</button>
       </form>
 
-      <p class="login-note">Anyone at the club can sign in and request a stringing. Stringers see the full queue.</p>
+      <p class="login-note">Players sign in to request a stringing and follow its status. Coaches see the full queue.</p>
       <p class="login-build" id="loginBuild"></p>
       <div id="recaptchaContainer"></div>
     </div>
@@ -456,12 +687,19 @@
     // Shown on the login screen. Phones sit on cached copies for a long time,
     // and knowing which build a device is actually running has settled more
     // than one "that fix didn't work" already.
-    const BUILD = "2026-08-22a";
+    const BUILD = "2026-09-24a";
 
+    // The stored values predate these labels and are kept so existing orders
+    // don't need migrating; what people read is the right-hand side.
     const STATUS_LABEL = {
-      requested: "Waiting",
+      requested: "Not started",
       in_progress: "In progress",
-      finished: "Ready for pickup"
+      finished: "Finished"
+    };
+    const STATUS_ORDER = ["requested", "in_progress", "finished"];
+    const GRIP_LABEL = {
+      overgrip: "New overgrip",
+      replacement: "New replacement grip"
     };
     // The two windows a racket can be dropped off in.
     const SLOTS = [
@@ -572,11 +810,29 @@
         card.appendChild(el("div", "order-line", asked || "No string specified"));
       }
 
-      if (o.dropOffDate) {
+      if (o.inShop) {
+        if (o.status !== "finished") card.appendChild(el("div", "order-line", "Racket is at the club"));
+      } else if (o.dropOffDate) {
         card.appendChild(el("div", "order-line",
           "Dropping off " + fmtDate(o.dropOffDate) +
           (o.dropOffSlot ? " · " + slotLabel(o.dropOffSlot) : "")));
       }
+
+      const chips = el("div", "chips");
+      if (GRIP_LABEL[o.grip]) chips.appendChild(el("span", "chip clay", GRIP_LABEL[o.grip]));
+      if (o.neededBy && o.status !== "finished") {
+        // A racket someone needs for tomorrow's match is the one to pick up
+        // first, so the chip turns solid once it's that close.
+        const soon = o.neededBy <= ymd(new Date(Date.now() + 24 * 3600000));
+        chips.appendChild(el("span", "chip" + (soon ? " urgent" : ""), "Needed by " + fmtDate(o.neededBy)));
+      }
+      if (forStaff && o.enteredByName) chips.appendChild(el("span", "chip", "Entered by " + o.enteredByName));
+      if (forStaff && o.status === "finished" && o.notifyError) {
+        chips.appendChild(el("span", "chip urgent", "Text didn't send: " + o.notifyError));
+      } else if (forStaff && o.status === "finished" && o.notifiedAt) {
+        chips.appendChild(el("span", "chip", "Player texted"));
+      }
+      if (chips.children.length) card.appendChild(chips);
 
       if (o.status === "finished" && o.finishedAt) {
         card.appendChild(el("div", "order-line",
@@ -591,6 +847,10 @@
       }
 
       if (o.notes) card.appendChild(el("div", "order-note", o.notes));
+
+      // Players get the whole journey rather than just a word, so "in
+      // progress" reads as two-thirds of the way there.
+      if (!forStaff) card.appendChild(statusSteps(o.status));
 
       // The stringer fills these in as they work, so the details are already
       // right when they press finish rather than being reconstructed after.
@@ -634,15 +894,15 @@
           b.addEventListener("click", () => setStatus(o, "in_progress"));
           actions.appendChild(b);
         } else if (o.status === "in_progress") {
-          const b = el("button", "secondary go", "Mark finished");
+          const b = el("button", "secondary clay", "Mark finished & text player");
           b.addEventListener("click", () => finishOrder(o, panel._fields));
           actions.appendChild(b);
-          const back = el("button", "secondary", "Back to waiting");
+          const back = el("button", "secondary", "Back to not started");
           back.addEventListener("click", () => setStatus(o, "requested"));
           actions.appendChild(back);
         } else if (o.status === "finished") {
           const back = el("button", "secondary", "Reopen");
-          back.title = "The member has already been texted that it's ready";
+          back.title = "The player has already been texted that it's ready";
           back.addEventListener("click", () => setStatus(o, "in_progress"));
           actions.appendChild(back);
         }
@@ -654,6 +914,20 @@
       if (actions.children.length) card.appendChild(actions);
 
       return card;
+    }
+
+    function statusSteps(status) {
+      const list = el("ol", "steps");
+      list.setAttribute("aria-label", "Status: " + (STATUS_LABEL[status] || status));
+      const at = STATUS_ORDER.indexOf(status);
+      STATUS_ORDER.forEach((s, i) => {
+        const li = el("li", null, STATUS_LABEL[s]);
+        if (i <= at) li.classList.add("done");
+        if (i === at) li.classList.add("now");
+        if (i === at && i === STATUS_ORDER.length - 1) li.classList.add("last");
+        list.appendChild(li);
+      });
+      return list;
     }
 
     function renderMine() {
@@ -785,6 +1059,10 @@
         tensionCross: cross || null,
         dropOffDate: dropOff,
         dropOffSlot: $("dropOffSlot").value,
+        inShop: false,
+        grip: $("grip").value,
+        neededBy: $("neededBy").value || null,
+        enteredByName: null,
         notes: $("notes").value.trim(),
         status: "requested",
         createdAt: Date.now(),
@@ -811,7 +1089,113 @@
       }
     }
 
+    // For the racket a player hands straight to a coach, or one left in the
+    // shop without an order. The player doesn't need to have signed in: the
+    // order is filed under their number, so it shows up in their list the
+    // first time they do, and the text goes to that number either way.
+    async function submitWalkIn(e) {
+      e.preventDefault();
+      const msg = $("walkInMsg");
+      msg.className = "msg err";
+      const phone = toE164($("wPhone").value);
+      const name = $("wName").value.trim();
+      const memberNumber = $("wMemberNo").value.trim();
+      const racket = $("wRacket").value.trim();
+      const stringName = $("wString").value.trim();
+      const tension = parseInt($("wTension").value, 10);
+      const cross = parseInt($("wTensionCross").value, 10);
+
+      if (!phone) { msg.textContent = "Enter the player's mobile number so they get the text."; return; }
+      if (!name) { msg.textContent = "Whose racket is it?"; return; }
+      if (!racket) { msg.textContent = "Which racket is it?"; return; }
+      if (!stringName) { msg.textContent = "Which string is going in?"; return; }
+      if (!tension || tension < 30 || tension > 75) {
+        msg.textContent = "Enter a tension between 30 and 75 lbs."; return;
+      }
+      if (cross && (cross < 30 || cross > 75)) {
+        msg.textContent = "Cross tension has to be between 30 and 75 lbs too."; return;
+      }
+
+      const id = newId("s");
+      const order = {
+        id,
+        memberPhone: phone,
+        memberName: name,
+        memberNumber,
+        racket, stringName,
+        tension,
+        tensionCross: cross || null,
+        dropOffDate: ymd(new Date()),
+        dropOffSlot: null,
+        inShop: true,
+        grip: $("wGrip").value,
+        neededBy: $("wNeededBy").value || null,
+        enteredByName: currentUser.name,
+        notes: $("wNotes").value.trim(),
+        status: "requested",
+        createdAt: Date.now(),
+        startedAt: null, startedByName: null,
+        finishedAt: null, strungByPhone: null, strungByName: null,
+        actualString: null, actualTension: null, actualTensionCross: null,
+        chargedByName: null,
+        notifiedAt: null
+      };
+
+      $("walkInSubmit").disabled = true;
+      try {
+        await db.collection(ORDERS).doc(id).set(order);
+        // Remember who this is, so their name is already right when they sign
+        // in and the next coach can fill them in from the number.
+        if (!members[phone]) {
+          await db.collection(MEMBERS).doc(phone).set(
+            { name, memberNumber, addedByStaff: true, updatedAt: Date.now() }, { merge: true })
+            .catch(err => console.error("walk-in member", err));
+        }
+        msg.className = "msg ok";
+        msg.textContent = name + "'s " + racket + " is in the queue.";
+        $("walkInForm").reset();
+      } catch (err) {
+        console.error("submitWalkIn", err);
+        msg.className = "msg err";
+        msg.textContent = "Couldn't add that just now. Check your connection and try again.";
+      } finally {
+        $("walkInSubmit").disabled = false;
+      }
+    }
+
+    // Typing a number a player is already known by fills in the rest.
+    function fillWalkInFromPhone() {
+      const phone = toE164($("wPhone").value);
+      const m = phone && members[phone];
+      if (!m) return;
+      if (!$("wName").value.trim()) $("wName").value = m.name || "";
+      if (!$("wMemberNo").value.trim()) $("wMemberNo").value = m.memberNumber || "";
+    }
+    // And picking a known name fills in the number.
+    function fillWalkInFromName() {
+      const name = $("wName").value.trim().toLowerCase();
+      if (!name) return;
+      const hit = Object.entries(members).find(([, m]) => (m.name || "").toLowerCase() === name);
+      if (!hit) return;
+      if (!$("wPhone").value.trim()) $("wPhone").value = prettyPhone(hit[0]);
+      if (!$("wMemberNo").value.trim()) $("wMemberNo").value = hit[1].memberNumber || "";
+    }
+    function fillMemberNames() {
+      const list = $("memberNames");
+      list.innerHTML = "";
+      Object.values(members).map(m => m.name).filter(Boolean).sort().forEach(n => {
+        const opt = document.createElement("option");
+        opt.value = n;
+        list.appendChild(opt);
+      });
+    }
+
     async function finishOrder(order, fields) {
+      // This is the one button that reaches outside the app: the player gets
+      // a text the moment it's pressed, and a text can't be taken back.
+      const first = (order.memberName || "the player").split(" ")[0];
+      if (!confirm("Mark " + (order.racket || "this racket") + " finished and text " + first +
+                   " at " + prettyPhone(order.memberPhone) + " that it's ready?")) return;
       const patch = {
         status: "finished",
         finishedAt: Date.now(),
@@ -908,6 +1292,7 @@
         membersSub = db.collection(MEMBERS).onSnapshot(snap => {
           members = {};
           snap.docs.forEach(d => { members[d.id] = d.data(); });
+          fillMemberNames();
         }, err => console.error("members listener", err));
         staffSub = db.collection(STAFF).onSnapshot(snap => {
           staffRoster = snap.docs.map(d => ({ phone: d.id, name: (d.data() || {}).name || d.id }));
@@ -1014,6 +1399,7 @@
 
     function showLogin(checking) {
       $("session").classList.remove("show");
+      $("roleTag").hidden = true;
       $("viewSwitch").classList.remove("show");
       $("memberView").hidden = true;
       $("staffView").hidden = true;
@@ -1027,7 +1413,11 @@
       $("loginScreen").classList.remove("show");
       $("sessionName").textContent = currentUser.name;
       $("session").classList.add("show");
-      $("tagline").textContent = isStaff ? "LAGCC · stringing room" : "LAGCC";
+      $("tagline").textContent = isStaff ? "LAGCC · Coaches" : "LAGCC · Racket service";
+      $("roleTag").hidden = !isStaff;
+      $("pageSub").textContent = isStaff
+        ? "Every racket in, what it needs, and where it's at."
+        : "Drop it off, follow along, we'll text you when it's ready.";
       render();
     }
     function loginError(text) {
@@ -1348,6 +1738,9 @@
     });
     $("orderForm").addEventListener("submit", submitOrder);
     $("addMemberBtn").addEventListener("click", addMember);
+    $("walkInForm").addEventListener("submit", submitWalkIn);
+    $("wPhone").addEventListener("change", fillWalkInFromPhone);
+    $("wName").addEventListener("change", fillWalkInFromName);
     $("pastSearch").addEventListener("input", renderStaffPast);
     $("staffFilters").addEventListener("click", e => {
       const b = e.target.closest("button");
@@ -1397,7 +1790,8 @@
                 memberNumber: "1042",
                 racket: "Wilson Blade 98", stringName: "Luxilon ALU Power 16L",
                 tension: 54, tensionCross: 52, dropOffDate: ymd(new Date(now + day)),
-                dropOffSlot: "am",
+                dropOffSlot: "am", grip: "replacement", neededBy: null, inShop: false,
+                enteredByName: null,
                 notes: "grommet looks cracked near 3 o'clock", status: "requested",
                 createdAt: now - 2 * hr, startedAt: null, startedByName: null,
                 finishedAt: null, strungByName: null, actualString: null,
@@ -1407,8 +1801,9 @@
                 memberNumber: "0871",
                 racket: "Babolat Pure Aero", stringName: "RPM Blast 17",
                 tension: 52, tensionCross: null, dropOffDate: ymd(new Date(now)),
-                dropOffSlot: "pm",
-                notes: "", status: "in_progress",
+                dropOffSlot: null, grip: "overgrip", neededBy: ymd(new Date(now + day)),
+                inShop: true, enteredByName: "Lou",
+                notes: "white overgrip please", status: "in_progress",
                 createdAt: now - 26 * hr, startedAt: now - hr, startedByName: "Anjali",
                 finishedAt: null, strungByName: null, actualString: null,
                 actualTension: null, actualTensionCross: null, chargedByName: null,

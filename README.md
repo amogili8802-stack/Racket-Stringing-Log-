@@ -1,8 +1,16 @@
-# LAGCC Racket Stringing Log
+# The Stringing Room (LAGCC racket stringing log)
 
-Members request a stringing and see their own rackets. Stringers see the whole
-queue, move a racket from waiting to the bench to finished, and the member gets
-a text when it's ready.
+Players request a stringing and follow their racket through **Not started →
+In progress → Finished**. Coaches see the whole queue, can enter a racket
+themselves for a player who hands one over, and the player gets a text the
+moment it's marked finished:
+
+> Hi Jordan, stringing is complete on your Wilson Blade 98. Come pick it up at
+> the club whenever works for you. - LAGCC Stringing Room
+
+The look is cream and green like the clinic sign-up site, but with a dark green
+masthead, clay accents and no script wordmark, so the two are never mistaken for
+each other. Add `?demo` to the URL to try both sides on sample data.
 
 `index.html` is the entire app — Firebase phone sign-in plus Firestore, no
 build step, the same shape as the court schedule. `functions/` holds the one
@@ -11,7 +19,8 @@ piece that can't run in a browser: sending the text.
 ## Who sees what
 
 **Members** — anyone who signs in with a phone number. They place orders in
-their own name and see only their own rackets. No roster has to be maintained;
+their own name and see only their own rackets, including any a coach entered
+under their number before they ever signed in. No roster has to be maintained;
 a member record is created the first time someone signs in. Staff can also add
 a member ahead of time so their name reads correctly from their first visit.
 
@@ -35,9 +44,14 @@ stringing_orders/{id}
   memberPhone, memberName      who it's for
   racket, stringName           what it is and what goes in it
   tension, tensionCross        lbs; crosses null when they match
-  dropOffDate                  the day they said they'd bring it
+  dropOffDate, dropOffSlot     the day and window they said they'd bring it
+  inShop                       true when a coach entered it with the racket in hand
+  enteredByName                the coach who entered it (null for player requests)
+  grip                         none | overgrip | replacement
+  neededBy                     date they need it back, optional
   notes                        free text, optional
   status                       requested -> in_progress -> finished
+                               (shown as Not started / In progress / Finished)
   createdAt
   startedAt, startedByName     who picked it up off the queue
   finishedAt, strungByName     who actually strung it, and when

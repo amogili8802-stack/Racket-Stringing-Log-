@@ -88,11 +88,14 @@ service cloud.firestore {
       // what keeps one member from listing another's rackets.
       allow read: if isStaff() || (signedIn() && resource.data.memberPhone == callerPhone());
 
-      // An order can only be placed in your own name, and only as a request —
-      // nobody hands themselves a finished racket, or one strung by someone
-      // else.
+      // A member can only place an order in their own name. Staff can enter
+      // one for anyone — the racket a player hands over at the desk — which
+      // is what the "Enter a racket" form does. Either way it starts as a
+      // request: nobody creates a racket that's already finished, since
+      // finishing is what sends the text.
       allow create: if signedIn()
-        && request.resource.data.memberPhone == callerPhone()
+        && (isStaff() || request.resource.data.memberPhone == callerPhone())
+        && request.resource.data.memberPhone is string
         && request.resource.data.status == "requested"
         && request.resource.data.strungByName == null
         && request.resource.data.finishedAt == null;
