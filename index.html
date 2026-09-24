@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The Stringing Room · LAGCC</title>
+  <title>Racket Stringing · LAGCC</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,650;1,9..144,400&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
@@ -385,7 +385,7 @@
         </svg>
         <div>
           <span class="brand-kicker" id="tagline">LAGCC</span>
-          <p class="brand-name">The Stringing Room</p>
+          <p class="brand-name">Racket Stringing</p>
         </div>
       </div>
       <div class="session" id="session">
@@ -404,7 +404,7 @@
       <button type="button" id="demoReset">Reset data</button>
     </div>
 
-    <p class="sub" id="pageSub">Drop it off, follow along, we'll text you when it's ready.</p>
+    <p class="sub" id="pageSub">Request a stringing and check its status.</p>
 
     <div class="switch" id="viewSwitch">
       <button type="button" data-view="staff" id="tabStaff">Stringing queue</button>
@@ -608,7 +608,7 @@
   <div class="login" id="loginScreen">
     <div class="login-card">
       <div class="brand">
-        <span class="brand-name">The Stringing Room</span>
+        <span class="brand-name">Racket Stringing</span>
       </div>
       <h1>Sign in</h1>
       <p class="sub" id="loginSub">We'll text you a code.</p>
@@ -1412,8 +1412,8 @@
       $("tagline").textContent = isStaff ? "LAGCC · Coaches" : "LAGCC · Racket service";
       $("roleTag").hidden = !isStaff;
       $("pageSub").textContent = isStaff
-        ? "Every racket in, what it needs, and where it's at."
-        : "Drop it off, follow along, we'll text you when it's ready.";
+        ? "Rackets to string and rackets finished."
+        : "Request a stringing and check its status.";
       render();
     }
     function loginError(text) {

@@ -1,4 +1,4 @@
-# The Stringing Room (LAGCC racket stringing log)
+# Racket Stringing (LAGCC stringing log)
 
 Players request a stringing and follow their racket through **Not started →
 In progress → Finished**. Coaches see the whole queue, can enter a racket
@@ -6,7 +6,7 @@ themselves for a player who hands one over, and the player gets a text the
 moment it's marked finished:
 
 > Hi Jordan, stringing is complete on your Wilson Blade 98. Come pick it up at
-> the club whenever works for you. - LAGCC Stringing Room
+> the club whenever works for you. - LAGCC Racket Stringing
 
 The look is cream and green like the clinic sign-up site, but with a dark green
 masthead, clay accents and no script wordmark, so the two are never mistaken for

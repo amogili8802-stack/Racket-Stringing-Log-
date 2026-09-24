@@ -47,7 +47,7 @@ exports.notifyRacketReady = onDocumentUpdated(
     const racket = after.racket ? `your ${after.racket}` : "your racket";
     const grip = after.grip && after.grip !== "none" ? " (new grip on too)" : "";
     const body = `${first ? `Hi ${first}, s` : "S"}tringing is complete on ${racket}${grip}. ` +
-      "Come pick it up at the club whenever works for you. - LAGCC Stringing Room";
+      "Come pick it up at the club whenever works for you. - LAGCC Racket Stringing";
 
     const sid = TWILIO_ACCOUNT_SID.value();
     const token = TWILIO_AUTH_TOKEN.value();
