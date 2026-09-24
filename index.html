@@ -442,11 +442,11 @@
               </select>
             </div>
             <div class="field">
-              <label for="tension">Tension, mains (lbs)</label>
+              <label for="tension">Mains (lbs)</label>
               <input type="number" id="tension" inputmode="numeric" min="30" max="75" />
             </div>
             <div class="field">
-              <label for="tensionCross">Crosses <span class="opt">(lbs, blank if same)</span></label>
+              <label for="tensionCross">Crosses (lbs)</label>
               <input type="number" id="tensionCross" inputmode="numeric" min="30" max="75" />
             </div>
           </div>
@@ -525,7 +525,7 @@
                   <input type="number" id="wTension" inputmode="numeric" min="30" max="75" />
                 </div>
                 <div class="field">
-                  <label for="wTensionCross">Crosses <span class="opt">(lbs, blank if same)</span></label>
+                  <label for="wTensionCross">Crosses (lbs)</label>
                   <input type="number" id="wTensionCross" inputmode="numeric" min="30" max="75" />
                 </div>
               </div>
@@ -1091,10 +1091,11 @@
       if (!racket) { msg.textContent = "Which racket is it?"; return; }
       if (!stringName) { msg.textContent = "Which string should we use?"; return; }
       if (!tension || tension < 30 || tension > 75) {
-        msg.textContent = "Enter a tension between 30 and 75 lbs."; return;
+        msg.textContent = "Enter the mains tension, between 30 and 75 lbs."; return;
       }
-      if (cross && (cross < 30 || cross > 75)) {
-        msg.textContent = "Cross tension has to be between 30 and 75 lbs too."; return;
+      // Asked for even when it matches the mains, so nobody's guessing.
+      if (!cross || cross < 30 || cross > 75) {
+        msg.textContent = "Enter the crosses tension too, between 30 and 75 lbs (even if it's the same as the mains)."; return;
       }
       if (!dropOff) { msg.textContent = "Pick the day you'll drop it off."; return; }
 
@@ -1106,7 +1107,7 @@
         memberNumber: currentUser.memberNumber || "",
         racket, stringName,
         tension,
-        tensionCross: cross || null,
+        tensionCross: cross,
         dropOffDate: dropOff,
         dropOffSlot: $("dropOffSlot").value,
         inShop: false,
@@ -1159,10 +1160,11 @@
       if (!racket) { msg.textContent = "Which racket is it?"; return; }
       if (!stringName) { msg.textContent = "Which string is going in?"; return; }
       if (!tension || tension < 30 || tension > 75) {
-        msg.textContent = "Enter a tension between 30 and 75 lbs."; return;
+        msg.textContent = "Enter the mains tension, between 30 and 75 lbs."; return;
       }
-      if (cross && (cross < 30 || cross > 75)) {
-        msg.textContent = "Cross tension has to be between 30 and 75 lbs too."; return;
+      // Asked for even when it matches the mains, so nobody's guessing.
+      if (!cross || cross < 30 || cross > 75) {
+        msg.textContent = "Enter the crosses tension too, between 30 and 75 lbs (even if it's the same as the mains)."; return;
       }
 
       const id = newId("s");
@@ -1173,7 +1175,7 @@
         memberNumber,
         racket, stringName,
         tension,
-        tensionCross: cross || null,
+        tensionCross: cross,
         dropOffDate: ymd(new Date()),
         dropOffSlot: null,
         inShop: true,
