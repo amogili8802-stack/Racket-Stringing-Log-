@@ -1669,6 +1669,7 @@
     let flow = null;             // { kind: "signup" | "reset", phone, name, memberNumber, password }
 
     function getRecaptcha() {
+      if (DEMO) return null;
       if (!recaptcha) {
         recaptcha = new firebase.auth.RecaptchaVerifier("recaptchaContainer", { size: "invisible" });
       }
@@ -2075,9 +2076,23 @@
       };
       db = { collection: col => colRef(col) };
 
+      // A stand-in for Firebase Auth good enough to walk through the sign-in
+      // screens: any password logs in, any 6 digits pass as the texted code.
+      const demoUser = phone => ({
+        phoneNumber: phone, getIdToken: async () => "demo",
+        providerData: [{ providerId: "phone" }, { providerId: "password" }],
+        updatePassword: async () => {}
+      });
+      const demoAuth = user => ({
+        currentUser: user,
+        signOut: async () => {},
+        signInWithEmailAndPassword: async email => asPerson("+" + email.split("@")[0]),
+        signInWithPhoneNumber: async phone => ({
+          confirm: async () => { const u = demoUser(phone); auth.currentUser = u; return { user: u }; }
+        })
+      });
       const asPerson = async phone => {
-        auth = { currentUser: { phoneNumber: phone, getIdToken: async () => "demo" },
-                 signOut: async () => {} };
+        auth = demoAuth(demoUser(phone));
         currentUser = null; isStaff = false;
         authGoneSettled = true;      // no real session to lose in here
         clearAuthGone();
@@ -2091,10 +2106,15 @@
       $("demoMember").addEventListener("click", () => asPerson(DEMO_MEMBER));
       $("demoStaff").addEventListener("click", () => asPerson(DEMO_STAFF));
       $("demoReset").addEventListener("click", () => { store = demoSeed(); fire(); });
-      // Log out has nothing to sign out of here; put them back as a member.
+      // Log out goes to the sign-in screen, where any number and password
+      // get back in (the sample player is (555) 000-0002, the coach -0001).
       $("logoutBtn").addEventListener("click", e => {
         e.stopImmediatePropagation();
-        asPerson(DEMO_MEMBER);
+        currentUser = null; isStaff = false; stopData();
+        auth = demoAuth(null);
+        showLogin(false);
+        $("loginBuild").textContent = "Demo: any password works, and any 6 digits pass as the code. " +
+          "Sample player (555) 000-0002, coach (555) 000-0001.";
       }, true);
 
       asPerson(DEMO_STAFF);
