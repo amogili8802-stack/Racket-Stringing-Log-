@@ -426,11 +426,11 @@
         <form id="orderForm" novalidate>
           <div class="field">
             <label for="racket">Racket</label>
-            <input type="text" id="racket" maxlength="60" list="commonRackets" placeholder="e.g. Wilson Blade 98" />
+            <input type="text" id="racket" maxlength="60" list="commonRackets" />
           </div>
           <div class="field">
             <label for="stringName">String</label>
-            <input type="text" id="stringName" maxlength="60" list="commonStrings" placeholder="e.g. Luxilon ALU Power 16L" />
+            <input type="text" id="stringName" maxlength="60" list="commonStrings" />
           </div>
           <div class="grid3">
             <div class="field">
@@ -443,11 +443,11 @@
             </div>
             <div class="field">
               <label for="tension">Tension, mains (lbs)</label>
-              <input type="number" id="tension" inputmode="numeric" min="30" max="75" placeholder="55" />
+              <input type="number" id="tension" inputmode="numeric" min="30" max="75" />
             </div>
             <div class="field">
-              <label for="tensionCross">Crosses <span class="opt">(lbs)</span></label>
-              <input type="number" id="tensionCross" inputmode="numeric" min="30" max="75" placeholder="same" />
+              <label for="tensionCross">Crosses <span class="opt">(lbs, blank if same)</span></label>
+              <input type="number" id="tensionCross" inputmode="numeric" min="30" max="75" />
             </div>
           </div>
           <div class="grid2">
@@ -465,7 +465,7 @@
           </div>
           <div class="field">
             <label for="notes">Anything else <span class="opt">(optional)</span></label>
-            <textarea id="notes" maxlength="300" placeholder="e.g. grip color, a cracked grommet near 3 o'clock"></textarea>
+            <textarea id="notes" maxlength="300"></textarea>
           </div>
           <button type="submit" class="primary" id="orderSubmit">Send request</button>
           <div class="msg" id="orderMsg"></div>
@@ -489,26 +489,26 @@
               <div class="grid3">
                 <div class="field">
                   <label for="wPhone">Mobile number</label>
-                  <input type="tel" id="wPhone" maxlength="20" placeholder="(555) 123-4567" />
+                  <input type="tel" id="wPhone" maxlength="20" />
                 </div>
                 <div class="field">
                   <label for="wName">Full name</label>
-                  <input type="text" id="wName" maxlength="60" list="memberNames" placeholder="Jordan Vega" />
+                  <input type="text" id="wName" maxlength="60" list="memberNames" />
                 </div>
                 <div class="field">
                   <label for="wMemberNo">Member # <span class="opt">(optional)</span></label>
-                  <input type="text" id="wMemberNo" maxlength="20" placeholder="1042" />
+                  <input type="text" id="wMemberNo" maxlength="20" />
                 </div>
               </div>
               <div class="section-title">Racket</div>
               <div class="grid2">
                 <div class="field">
                   <label for="wRacket">Racket</label>
-                  <input type="text" id="wRacket" maxlength="60" list="commonRackets" placeholder="e.g. Wilson Blade 98" />
+                  <input type="text" id="wRacket" maxlength="60" list="commonRackets" />
                 </div>
                 <div class="field">
                   <label for="wString">String</label>
-                  <input type="text" id="wString" maxlength="60" list="commonStrings" placeholder="e.g. Luxilon ALU Power 16L" />
+                  <input type="text" id="wString" maxlength="60" list="commonStrings" />
                 </div>
               </div>
               <div class="grid3">
@@ -522,16 +522,16 @@
                 </div>
                 <div class="field">
                   <label for="wTension">Mains (lbs)</label>
-                  <input type="number" id="wTension" inputmode="numeric" min="30" max="75" placeholder="55" />
+                  <input type="number" id="wTension" inputmode="numeric" min="30" max="75" />
                 </div>
                 <div class="field">
-                  <label for="wTensionCross">Crosses <span class="opt">(lbs)</span></label>
-                  <input type="number" id="wTensionCross" inputmode="numeric" min="30" max="75" placeholder="same" />
+                  <label for="wTensionCross">Crosses <span class="opt">(lbs, blank if same)</span></label>
+                  <input type="number" id="wTensionCross" inputmode="numeric" min="30" max="75" />
                 </div>
               </div>
               <div class="field">
                   <label for="wNotes">Notes <span class="opt">(optional)</span></label>
-                  <input type="text" id="wNotes" maxlength="300" placeholder="e.g. black overgrip" />
+                  <input type="text" id="wNotes" maxlength="300" />
               </div>
               <button type="submit" class="primary" id="walkInSubmit">Add to the queue</button>
               <div class="msg" id="walkInMsg"></div>
@@ -566,16 +566,16 @@
             <div class="grid2">
               <div class="field">
                 <label for="newMemberName">Full name</label>
-                <input type="text" id="newMemberName" maxlength="60" placeholder="Jordan Vega" />
+                <input type="text" id="newMemberName" maxlength="60" />
               </div>
               <div class="field">
                 <label for="newMemberNo">Member number</label>
-                <input type="text" id="newMemberNo" maxlength="20" placeholder="1042" />
+                <input type="text" id="newMemberNo" maxlength="20" />
               </div>
             </div>
             <div class="field">
               <label for="newMemberPhone">Phone</label>
-              <input type="tel" id="newMemberPhone" maxlength="20" placeholder="(555) 123-4567" />
+              <input type="tel" id="newMemberPhone" maxlength="20" />
             </div>
             <button type="button" class="primary" id="addMemberBtn">Add player</button>
             <div class="msg" id="addMemberMsg"></div>
@@ -620,7 +620,7 @@
       <form id="loginStep" novalidate>
         <div class="field">
           <label for="loginPhone">Mobile number</label>
-          <input type="tel" id="loginPhone" autocomplete="username" maxlength="20" placeholder="(555) 123-4567" />
+          <input type="tel" id="loginPhone" autocomplete="username" maxlength="20" />
         </div>
         <div class="field">
           <label for="loginPassword">Password</label>
@@ -636,16 +636,16 @@
       <form id="signupStep" novalidate hidden>
         <div class="field">
           <label for="suName">Full name</label>
-          <input type="text" id="suName" autocomplete="name" maxlength="60" placeholder="Jordan Vega" />
+          <input type="text" id="suName" autocomplete="name" maxlength="60" />
         </div>
         <div class="grid2">
           <div class="field">
             <label for="suPhone">Mobile number</label>
-            <input type="tel" id="suPhone" autocomplete="tel" maxlength="20" placeholder="(555) 123-4567" />
+            <input type="tel" id="suPhone" autocomplete="tel" maxlength="20" />
           </div>
           <div class="field">
             <label for="suMemberNo">Member number</label>
-            <input type="text" id="suMemberNo" maxlength="20" placeholder="1042" />
+            <input type="text" id="suMemberNo" maxlength="20" />
           </div>
         </div>
         <div class="field">
@@ -660,7 +660,7 @@
       <form id="forgotStep" novalidate hidden>
         <div class="field">
           <label for="fpPhone">Mobile number</label>
-          <input type="tel" id="fpPhone" autocomplete="tel" maxlength="20" placeholder="(555) 123-4567" />
+          <input type="tel" id="fpPhone" autocomplete="tel" maxlength="20" />
         </div>
         <button type="submit" class="primary" id="forgotSubmit">Text me a code</button>
         <button type="button" class="login-back" id="forgotBack">Back to log in</button>
@@ -669,7 +669,7 @@
       <form id="codeStep" novalidate hidden>
         <div class="field">
           <label for="loginCode">6-digit code</label>
-          <input type="text" id="loginCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" />
+          <input type="text" id="loginCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" />
         </div>
         <button type="submit" class="primary" id="codeVerify">Verify</button>
         <button type="button" class="login-back" id="codeBack">Start over</button>
@@ -686,11 +686,11 @@
       <form id="nameStep" novalidate hidden>
         <div class="field">
           <label for="loginName">Full name</label>
-          <input type="text" id="loginName" autocomplete="name" maxlength="60" placeholder="Jordan Vega" />
+          <input type="text" id="loginName" autocomplete="name" maxlength="60" />
         </div>
         <div class="field">
           <label for="loginMemberNo">Member number</label>
-          <input type="text" id="loginMemberNo" maxlength="20" placeholder="1042" />
+          <input type="text" id="loginMemberNo" maxlength="20" />
         </div>
         <button type="submit" class="primary" id="nameSave">Continue</button>
       </form>
