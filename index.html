@@ -244,13 +244,11 @@
     .order-diff { margin-top: 8px; font-size: 12.5px; font-weight: 600; color: #8a4424; }
     .order .order-note { background: #fffbe9; border-color: #eadfb5; }
     .chip.plain { background: transparent; border: 1px solid var(--line); color: var(--muted); }
-    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+    .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
     .stat { background: var(--tint); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; }
     .stat-n { font-family: var(--serif); font-size: 30px; font-weight: 650; line-height: 1; font-variant-numeric: tabular-nums; }
     .stat-label { font-size: 12px; font-weight: 700; color: var(--muted); margin-top: 4px; }
     .stat.clay .stat-n { color: var(--clay); }
-    .stat.urgent { background: var(--clay-soft); border-color: #eccdb9; }
-    .stat.urgent .stat-n { color: #8a4424; }
     @media (max-width: 560px) {
       .specs { grid-template-columns: 1fr 1fr; }
       .specs .spec.wide { grid-column: 1 / -1; }
@@ -484,7 +482,7 @@
               <input type="number" id="tensionCross" inputmode="numeric" min="30" max="75" placeholder="same" />
             </div>
           </div>
-          <div class="grid3">
+          <div class="grid2">
             <div class="field">
               <label for="dropOff">Day you'll drop it off</label>
               <input type="date" id="dropOff" />
@@ -496,14 +494,10 @@
                 <option value="pm">12pm – 4pm</option>
               </select>
             </div>
-            <div class="field">
-              <label for="neededBy">Need it by <span class="opt">(optional)</span></label>
-              <input type="date" id="neededBy" />
-            </div>
           </div>
           <div class="field">
             <label for="notes">Anything else <span class="opt">(optional)</span></label>
-            <textarea id="notes" maxlength="300" placeholder="e.g. grip color, a cracked grommet near 3 o'clock, match on Saturday"></textarea>
+            <textarea id="notes" maxlength="300" placeholder="e.g. grip color, a cracked grommet near 3 o'clock"></textarea>
           </div>
           <button type="submit" class="primary" id="orderSubmit">Send request</button>
           <div class="msg" id="orderMsg"></div>
@@ -567,15 +561,9 @@
                   <input type="number" id="wTensionCross" inputmode="numeric" min="30" max="75" placeholder="same" />
                 </div>
               </div>
-              <div class="grid2">
-                <div class="field">
-                  <label for="wNeededBy">Need it by <span class="opt">(optional)</span></label>
-                  <input type="date" id="wNeededBy" />
-                </div>
-                <div class="field">
+              <div class="field">
                   <label for="wNotes">Notes <span class="opt">(optional)</span></label>
                   <input type="text" id="wNotes" maxlength="300" placeholder="e.g. black overgrip" />
-                </div>
               </div>
               <button type="submit" class="primary" id="walkInSubmit">Add to the queue</button>
               <div class="msg" id="walkInMsg"></div>
@@ -866,10 +854,6 @@
 
       // One line of logistics, as chips so it's still skimmable.
       const meta = el("div", "chips");
-      if (o.neededBy && !done) {
-        const soon = o.neededBy <= ymd(new Date(Date.now() + 24 * 3600000));
-        meta.appendChild(el("span", "chip" + (soon ? " urgent" : " clay"), "Needed " + fmtDate(o.neededBy)));
-      }
       if (!done) {
         if (o.inShop) meta.appendChild(el("span", "chip plain", "At the club"));
         else if (o.dropOffDate) meta.appendChild(el("span", "chip plain",
@@ -1004,7 +988,8 @@
     }
 
     // Two piles, in the order they get worked: what's on the machine, then
-    // what's waiting (oldest first). A count per pile answers "how much have
+    // what's waiting (oldest first). There are no deadlines: players are told
+    // nothing about timing, just texted when it's done. A count per pile answers "how much have
     // I got today" before anyone reads a card.
     function renderStaff() {
       const wrap = $("staffOrders");
@@ -1012,13 +997,10 @@
       const live = orders.filter(o => o.status !== "finished").sort(sortForList);
       const bench = live.filter(o => o.status === "in_progress");
       const waiting = live.filter(o => o.status === "requested");
-      const soonDay = ymd(new Date(Date.now() + 24 * 3600000));
-      const due = live.filter(o => o.neededBy && o.neededBy <= soonDay);
 
       const stats = $("queueStats");
       stats.innerHTML = "";
-      [["Not started", waiting.length, ""], ["In progress", bench.length, "clay"],
-       ["Due by tomorrow", due.length, due.length ? "urgent" : ""]].forEach(([label, n, cls]) => {
+      [["Not started", waiting.length, ""], ["In progress", bench.length, "clay"]].forEach(([label, n, cls]) => {
         const box = el("div", "stat" + (cls ? " " + cls : ""));
         box.appendChild(el("div", "stat-n", String(n)));
         box.appendChild(el("div", "stat-label", label));
@@ -1112,7 +1094,6 @@
         dropOffSlot: $("dropOffSlot").value,
         inShop: false,
         grip: $("grip").value,
-        neededBy: $("neededBy").value || null,
         enteredByName: null,
         notes: $("notes").value.trim(),
         status: "requested",
@@ -1180,7 +1161,6 @@
         dropOffSlot: null,
         inShop: true,
         grip: $("wGrip").value,
-        neededBy: $("wNeededBy").value || null,
         enteredByName: currentUser.name,
         notes: $("wNotes").value.trim(),
         status: "requested",
@@ -1835,7 +1815,7 @@
                 memberNumber: "1042",
                 racket: "Wilson Blade 98", stringName: "Luxilon ALU Power 16L",
                 tension: 54, tensionCross: 52, dropOffDate: ymd(new Date(now + day)),
-                dropOffSlot: "am", grip: "replacement", neededBy: null, inShop: false,
+                dropOffSlot: "am", grip: "replacement", inShop: false,
                 enteredByName: null,
                 notes: "grommet looks cracked near 3 o'clock", status: "requested",
                 createdAt: now - 2 * hr, startedAt: null, startedByName: null,
@@ -1846,7 +1826,7 @@
                 memberNumber: "0871",
                 racket: "Babolat Pure Aero", stringName: "RPM Blast 17",
                 tension: 52, tensionCross: null, dropOffDate: ymd(new Date(now)),
-                dropOffSlot: null, grip: "overgrip", neededBy: ymd(new Date(now + day)),
+                dropOffSlot: null, grip: "overgrip",
                 inShop: true, enteredByName: "Lou",
                 notes: "white overgrip please", status: "in_progress",
                 createdAt: now - 26 * hr, startedAt: now - hr, startedByName: "Anjali",

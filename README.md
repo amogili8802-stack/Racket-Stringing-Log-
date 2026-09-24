@@ -48,7 +48,6 @@ stringing_orders/{id}
   inShop                       true when a coach entered it with the racket in hand
   enteredByName                the coach who entered it (null for player requests)
   grip                         none | overgrip | replacement
-  neededBy                     date they need it back, optional
   notes                        free text, optional
   status                       requested -> in_progress -> finished
                                (shown as Not started / In progress / Finished)
