@@ -315,39 +315,6 @@
     details.adder.quiet summary { font-size: 16px; }
     details.adder.quiet summary::before { background: var(--green-soft); color: var(--green); }
 
-    /* ---------- pierce ---------- */
-    .pierce {
-      position: fixed; inset: 0; z-index: 999;
-      display: none;
-      flex-wrap: wrap;
-      align-content: center; justify-content: center;
-      gap: 0 18px;
-      overflow: hidden;
-      background: rgba(23, 58, 45, .93);
-      color: #f4efe2;
-      font-size: clamp(28px, 7vw, 64px);
-      font-weight: 800;
-      letter-spacing: -.02em;
-      line-height: 1.05;
-      text-transform: lowercase;
-      /* Clicks must still land on whatever was underneath — this is decoration
-         over the top of a working button, not a thing to be dismissed. */
-      pointer-events: none;
-      user-select: none;
-    }
-    .pierce.go { display: flex; animation: pierceFlash .8s ease-out forwards; }
-    @keyframes pierceFlash {
-      0%   { opacity: 0; transform: scale(1.04); }
-      10%  { opacity: 1; transform: scale(1); }
-      65%  { opacity: 1; }
-      100% { opacity: 0; }
-    }
-    /* Still says it, without the full-screen strobe. */
-    @media (prefers-reduced-motion: reduce) {
-      .pierce.go { animation: pierceFade .8s ease-out forwards; }
-      @keyframes pierceFade { 0%, 100% { opacity: 0; } 20%, 65% { opacity: .96; } }
-    }
-
     /* ---------- demo ---------- */
     .demo-bar {
       display: none;
@@ -407,8 +374,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-
-  <div class="pierce" id="pierceOverlay" aria-hidden="true"></div>
 
   <header class="masthead">
     <div class="masthead-inner">
@@ -1916,34 +1881,6 @@
 
       asPerson(DEMO_STAFF);
     }
-
-    // ---------- pierce ----------
-    // Fills the screen on every button press and gets out of the way again.
-    // Capture phase, so it still fires for the handlers that stop propagation,
-    // and the overlay takes no pointer events, so the button underneath does
-    // its actual job while this happens over the top.
-    (function pierce() {
-      const overlay = $("pierceOverlay");
-      if (!overlay) return;
-      overlay.textContent = "";
-      for (let i = 0; i < 160; i++) {
-        const word = document.createElement("span");
-        word.textContent = "pierce";
-        // A little variation so it reads as a wall of it rather than a grid.
-        word.style.opacity = (0.55 + Math.random() * 0.45).toFixed(2);
-        word.style.transform = "rotate(" + (Math.random() * 6 - 3).toFixed(1) + "deg)";
-        overlay.appendChild(word);
-      }
-      let timer = null;
-      document.addEventListener("click", e => {
-        if (!e.target.closest("button")) return;
-        overlay.classList.remove("go");
-        void overlay.offsetWidth;          // restart the animation mid-flight
-        overlay.classList.add("go");
-        if (timer) clearTimeout(timer);
-        timer = setTimeout(() => overlay.classList.remove("go"), 850);
-      }, true);
-    })();
 
     updateBuildStamp();
     setDefaultDropOff();
