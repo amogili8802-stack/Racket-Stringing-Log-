@@ -242,7 +242,7 @@
     .order .order-note { background: #fffbe9; border-color: #eadfb5; }
     /* Coaches must not miss a note (a cracked grommet, a grip color), so it
        gets a hard black outline on their side. */
-    .order .order-note.staff { border: 1px solid #111; }
+    .order .order-note.staff { border: 1px solid #9a968c; }
     .order.staff .spec { border: 1px solid #111; }
     .chip.plain { background: transparent; border: 1px solid var(--line); color: var(--muted); }
     .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
@@ -732,6 +732,8 @@
       finished: "Finished"
     };
     const STATUS_ORDER = ["requested", "in_progress", "finished"];
+    // Who strings rackets, for the "Strung by" picker.
+    const STRINGERS = ["Byron", "Alena"];
     const GRIP_LABEL = {
       overgrip: "New overgrip",
       replacement: "New replacement grip"
@@ -751,8 +753,6 @@
     let members = {};            // phone -> { name }
     let ordersSub = null;
     let membersSub = null;
-    let staffSub = null;
-    let staffRoster = [];        // [{ phone, name }] — stringers, staff-only
     let confirmationResult = null;
     let recaptcha = null;
     let view = "member";
@@ -879,7 +879,6 @@
         if (o.status === "in_progress" && o.startedByName) meta.appendChild(el("span", "chip plain", "Started by " + o.startedByName));
         if (done && o.strungByName) meta.appendChild(el("span", "chip plain",
           "Strung by " + o.strungByName + (o.finishedAt ? ", " + fmtDate(ymd(new Date(o.finishedAt))) : "")));
-        if (done && o.chargedByName) meta.appendChild(el("span", "chip plain", "Charged by " + o.chargedByName));
         if (done && o.notifyError) meta.appendChild(el("span", "chip urgent", "Text didn't send: " + o.notifyError));
         else if (done && o.notifiedAt) meta.appendChild(el("span", "chip", "Player texted"));
         if (o.memberPhone) meta.appendChild(el("span", "chip plain", prettyPhone(o.memberPhone)));
@@ -910,20 +909,23 @@
         row.appendChild(sIn); row.appendChild(tIn); row.appendChild(cIn);
         panel.appendChild(row);
 
-        const chargeRow = el("div", "finish-row");
-        const chargeLabel = el("span", "finish-label", "Charged by");
+        // Picked every time rather than defaulted, so a racket is never
+        // credited to whoever happened to be logged in.
+        const byRow = el("div", "finish-row");
+        const byLabel = el("span", "finish-label", "Strung by");
         const sel = el("select");
-        const names = staffNames();
-        for (const n of names) {
+        for (const n of ["", ...STRINGERS]) {
           const opt = document.createElement("option");
-          opt.value = n; opt.textContent = n;
-          if (n === (o.chargedByName || (currentUser && currentUser.name))) opt.selected = true;
+          opt.value = n; opt.textContent = n || "Choose…";
+          if (n && n === o.strungByName) opt.selected = true;
           sel.appendChild(opt);
         }
-        chargeRow.appendChild(chargeLabel); chargeRow.appendChild(sel);
-        panel.appendChild(chargeRow);
+        byRow.appendChild(byLabel); byRow.appendChild(sel);
+        panel.appendChild(byRow);
+        const err = el("div", "msg err");
+        panel.appendChild(err);
         card.appendChild(panel);
-        panel._fields = { sIn, tIn, cIn, sel };
+        panel._fields = { sIn, tIn, cIn, sel, err };
       }
 
       const actions = el("div", "order-actions");
@@ -1046,7 +1048,7 @@
       const past = orders
         .filter(o => o.status === "finished")
         .filter(o => !q || [o.memberName, o.memberNumber, o.racket, o.stringName,
-                            o.actualString, o.strungByName, o.chargedByName]
+                            o.actualString, o.strungByName]
                             .some(v => (v || "").toString().toLowerCase().includes(q)))
         .sort((a, b) => (b.finishedAt || 0) - (a.finishedAt || 0));
 
@@ -1118,7 +1120,6 @@
         startedAt: null, startedByName: null,
         finishedAt: null, strungByPhone: null, strungByName: null,
         actualString: null, actualTension: null, actualTensionCross: null,
-        chargedByName: null,
         notifiedAt: null
       };
 
@@ -1186,7 +1187,6 @@
         startedAt: null, startedByName: null,
         finishedAt: null, strungByPhone: null, strungByName: null,
         actualString: null, actualTension: null, actualTensionCross: null,
-        chargedByName: null,
         notifiedAt: null
       };
 
@@ -1240,6 +1240,8 @@
     }
 
     async function finishOrder(order, fields) {
+      if (!fields.sel.value) { fields.err.textContent = "Choose who strung it first."; fields.sel.focus(); return; }
+      fields.err.textContent = "";
       // This is the one button that reaches outside the app: the player gets
       // a text the moment it's pressed, and a text can't be taken back.
       const first = (order.memberName || "the player").split(" ")[0];
@@ -1248,12 +1250,11 @@
       const patch = {
         status: "finished",
         finishedAt: Date.now(),
-        strungByPhone: currentUser.phone,
-        strungByName: currentUser.name,
+        strungByPhone: null,
+        strungByName: fields.sel.value,
         actualString: (fields.sIn.value || "").trim() || order.stringName || "",
         actualTension: parseInt(fields.tIn.value, 10) || order.tension || null,
-        actualTensionCross: parseInt(fields.cIn.value, 10) || null,
-        chargedByName: fields.sel.value || currentUser.name
+        actualTensionCross: parseInt(fields.cIn.value, 10) || null
       };
       try {
         await db.collection(ORDERS).doc(order.id).update(patch);
@@ -1280,7 +1281,6 @@
         patch.finishedAt = null;
         patch.strungByPhone = null;
         patch.strungByName = null;
-        patch.chargedByName = null;
         patch.notifiedAt = null;
       }
       try {
@@ -1343,29 +1343,15 @@
           snap.docs.forEach(d => { members[d.id] = d.data(); });
           fillMemberNames();
         }, err => console.error("members listener", err));
-        staffSub = db.collection(STAFF).onSnapshot(snap => {
-          staffRoster = snap.docs.map(d => ({ phone: d.id, name: (d.data() || {}).name || d.id }));
-          render();
-        }, err => console.error("staff listener", err));
       }
     }
     function stopData() {
       if (ordersSub) { ordersSub(); ordersSub = null; }
       if (membersSub) { membersSub(); membersSub = null; }
-      if (staffSub) { staffSub(); staffSub = null; }
       orders = [];
       members = {};
-      staffRoster = [];
     }
 
-    // Whoever is signed in always appears, so the picker works before the
-    // roster has arrived and on the first racket of a fresh install.
-    function staffNames() {
-      const names = staffRoster.map(s => s.name).filter(Boolean);
-      const me = currentUser && currentUser.name;
-      if (me && !names.includes(me)) names.unshift(me);
-      return names.length ? names.sort() : (me ? [me] : []);
-    }
 
     function setDefaultDropOff() {
       const t = new Date();
@@ -1987,8 +1973,8 @@
       const now = Date.now(), hr = 3600000, day = 24 * hr;
       return {
         stringing_staff: {
-          [DEMO_STAFF]: { name: "Anjali" },
-          "+15550000003": { name: "Lou" }
+          [DEMO_STAFF]: { name: "Byron" },
+          "+15550000003": { name: "Alena" }
         },
         stringing_members: {
           [DEMO_MEMBER]: { name: "Jordan Vega", memberNumber: "1042" },
@@ -2005,18 +1991,18 @@
                 notes: "grommet looks cracked near 3 o'clock", status: "requested",
                 createdAt: now - 2 * hr, startedAt: null, startedByName: null,
                 finishedAt: null, strungByName: null, actualString: null,
-                actualTension: null, actualTensionCross: null, chargedByName: null,
+                actualTension: null, actualTensionCross: null,
                 notifiedAt: null },
           d2: { id: "d2", memberPhone: "+15550000004", memberName: "Priya Raman",
                 memberNumber: "0871",
                 racket: "Babolat Pure Aero", stringName: "RPM Blast 17",
                 tension: 52, tensionCross: null, dropOffDate: ymd(new Date(now)),
                 dropOffSlot: null, grip: "overgrip",
-                inShop: true, enteredByName: "Lou",
+                inShop: true, enteredByName: "Alena",
                 notes: "white overgrip please", status: "in_progress",
-                createdAt: now - 26 * hr, startedAt: now - hr, startedByName: "Anjali",
+                createdAt: now - 26 * hr, startedAt: now - hr, startedByName: "Byron",
                 finishedAt: null, strungByName: null, actualString: null,
-                actualTension: null, actualTensionCross: null, chargedByName: null,
+                actualTension: null, actualTensionCross: null,
                 notifiedAt: null },
           // Strung with something other than what was asked for, which is the
           // case the log exists to record.
@@ -2027,9 +2013,9 @@
                 dropOffSlot: "am",
                 notes: "", status: "finished",
                 createdAt: now - 3 * day, startedAt: now - 2 * day,
-                startedByName: "Lou", finishedAt: now - 2 * day + hr,
-                strungByName: "Lou", actualString: "Solinco Tour Bite 16L",
-                actualTension: 50, actualTensionCross: 48, chargedByName: "Anjali",
+                startedByName: "Byron", finishedAt: now - 2 * day + hr,
+                strungByName: "Byron", actualString: "Solinco Tour Bite 16L",
+                actualTension: 50, actualTensionCross: 48, 
                 notifiedAt: now - 2 * day + hr },
           d4: { id: "d4", memberPhone: DEMO_MEMBER, memberName: "Jordan Vega",
                 memberNumber: "1042",
@@ -2038,9 +2024,9 @@
                 dropOffSlot: "pm",
                 notes: "", status: "finished",
                 createdAt: now - 21 * day, startedAt: now - 20 * day,
-                startedByName: "Anjali", finishedAt: now - 20 * day + 2 * hr,
-                strungByName: "Anjali", actualString: "Head Lynx Tour 17",
-                actualTension: 55, actualTensionCross: null, chargedByName: "Lou",
+                startedByName: "Byron", finishedAt: now - 20 * day + 2 * hr,
+                strungByName: "Alena", actualString: "Head Lynx Tour 17",
+                actualTension: 55, actualTensionCross: null, 
                 notifiedAt: now - 20 * day + 2 * hr }
         }
       };
