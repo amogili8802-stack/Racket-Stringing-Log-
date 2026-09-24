@@ -179,7 +179,7 @@
     /* ---------- order rows ---------- */
     .orders { margin-top: 4px; }
     .order {
-      border: 1px solid var(--border);
+      border: 1px solid #111;
       border-radius: 14px;
       padding: 16px 18px;
       margin-bottom: 12px;
@@ -249,11 +249,19 @@
     .order .order-note.staff { border: 1px solid #9a968c; }
     .order.staff .spec { border: 1px solid #111; }
     .chip.plain { background: transparent; border: 1px solid var(--line); color: var(--muted); }
-    .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
-    .stat { background: var(--tint); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; }
-    .stat-n { font-family: var(--serif); font-size: 30px; font-weight: 650; line-height: 1; font-variant-numeric: tabular-nums; }
-    .stat-label { font-size: 12px; font-weight: 700; color: var(--muted); margin-top: 4px; }
-    .stat.clay .stat-n { color: var(--clay); }
+    /* The counts sit beside the heading, as pills in the status badges'
+       colors, so they read as a summary rather than as another card. */
+    .queue-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+    .queue-head h2 { margin: 0; }
+    .stats { display: flex; gap: 8px; flex-wrap: wrap; }
+    .stat {
+      display: inline-flex; align-items: baseline; gap: 5px;
+      padding: 5px 12px; border-radius: 999px;
+      background: var(--waiting); color: #fff;
+      font-size: 13px; font-weight: 700; white-space: nowrap;
+    }
+    .stat.clay { background: var(--bench); }
+    .stat-n { font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
     @media (max-width: 560px) {
       .specs { grid-template-columns: .9fr .9fr 1.6fr; }
       .spec { padding: 8px 10px; }
@@ -261,8 +269,6 @@
       .order-top .badge { margin-top: 4px; }
       .specs .spec.wide { grid-column: 1 / -1; }
       .spec-value { font-size: 15.5px; }
-      .stat { padding: 8px 10px; }
-      .stat-n { font-size: 24px; }
     }
 
     /* ---------- status tracker ---------- */
@@ -549,8 +555,10 @@
       </div>
 
       <div class="card">
-        <h2>Stringing queue</h2>
-        <div class="stats" id="queueStats"></div>
+        <div class="queue-head">
+          <h2>Stringing queue</h2>
+          <div class="stats" id="queueStats"></div>
+        </div>
         <div class="orders" id="staffOrders"></div>
       </div>
 
@@ -1038,10 +1046,10 @@
       const stats = $("queueStats");
       stats.innerHTML = "";
       [["Not started", waiting.length, ""], ["In progress", bench.length, "clay"]].forEach(([label, n, cls]) => {
-        const box = el("div", "stat" + (cls ? " " + cls : ""));
-        box.appendChild(el("div", "stat-n", String(n)));
-        box.appendChild(el("div", "stat-label", label));
-        stats.appendChild(box);
+        const pill = el("span", "stat" + (cls ? " " + cls : ""));
+        pill.appendChild(el("b", "stat-n", String(n)));
+        pill.appendChild(document.createTextNode(" " + label));
+        stats.appendChild(pill);
       });
 
       if (!live.length) {
