@@ -678,7 +678,7 @@
             <input type="tel" id="suPhone" autocomplete="tel" maxlength="20" />
           </div>
           <div class="field">
-            <label for="suMemberNo">Member number</label>
+            <label for="suMemberNo">Member number <span class="opt">(coaches leave blank)</span></label>
             <input type="text" id="suMemberNo" maxlength="20" />
           </div>
         </div>
@@ -1761,7 +1761,8 @@
       const password = $("suPassword").value;
       if (!name) { loginError("Enter your full name so we know whose racket it is."); return; }
       if (!phone) { loginError("Enter your mobile number, e.g. (555) 123-4567."); return; }
-      if (!memberNumber) { loginError("Enter your member number."); return; }
+      // Left blank here on purpose: coaches don't have one, and a player who
+      // skips it is asked for it once signed in (see handleAuth).
       if (password.length < MIN_PASSWORD) { loginError("Use at least " + MIN_PASSWORD + " characters for your password."); return; }
       flow = { kind: "signup", phone, name, memberNumber, password };
       await sendCode(phone, $("signupSubmit"));
