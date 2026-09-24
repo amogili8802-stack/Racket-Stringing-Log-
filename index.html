@@ -1411,9 +1411,9 @@
       $("session").classList.add("show");
       $("tagline").textContent = isStaff ? "LAGCC · Coaches" : "LAGCC · Racket service";
       $("roleTag").hidden = !isStaff;
-      $("pageSub").textContent = isStaff
-        ? "Rackets to string and rackets finished."
-        : "Request a stringing and check its status.";
+      // Coaches already see "Coaches" in the header; the line is for players.
+      $("pageSub").textContent = "Request a stringing and check its status.";
+      $("pageSub").hidden = isStaff;
       render();
     }
     function loginError(text) {
