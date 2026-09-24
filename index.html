@@ -6,19 +6,19 @@
   <title>Racket Stringing · LAGCC</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,650;1,9..144,400&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     /* Cream and green, like the clinic sign-up site, but deliberately not the
        same: a dark green masthead instead of a white one, a navy accent
-       instead of gold, and no script wordmark. A coach flipping between the
+       instead of gold, and clean sans-serif type. A coach flipping between the
        two tabs should never have to read the page to know which one it is. */
     :root {
-      --bg: #f2ede1;
-      --surface: #fffdf8;
-      --tint: #f8f4ea;
+      --bg: #f4f1e9;
+      --surface: #ffffff;
+      --tint: #f6f3ec;
       --text: #1f2a24;
       --muted: #6b6a5f;
-      --border: #e1d9c6;
+      --border: #e8e2d4;
       --line: #d6ccb4;
       --green: #1f4a3a;
       --green-deep: #173a2d;
@@ -29,7 +29,9 @@
       --bench: #2f4a6b;
       --ready: #2f6b4f;
       --danger: #a8321f;
-      --serif: Fraunces, "Iowan Old Style", Georgia, serif;
+      /* Headings share the body's sans; the name is kept so older rules still resolve. */
+      --serif: Manrope, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --shadow: 0 1px 2px rgba(31,42,36,.04), 0 6px 20px rgba(31,42,36,.06);
     }
     * { box-sizing: border-box; }
     body {
@@ -38,14 +40,15 @@
       background: var(--bg);
       color: var(--text);
       -webkit-text-size-adjust: 100%;
+      -webkit-font-smoothing: antialiased;
     }
+    button { transition: background-color .15s, border-color .15s, color .15s, box-shadow .15s; }
     .page { max-width: 860px; margin: 0 auto; padding: 26px 20px 60px; }
 
     /* ---------- masthead ---------- */
     .masthead {
       background: var(--green);
       color: #f4efe2;
-      border-bottom: 3px solid var(--clay);
     }
     .masthead-inner {
       max-width: 860px; margin: 0 auto;
@@ -55,20 +58,20 @@
     .brand { display: flex; align-items: center; gap: 12px; }
     /* The club's name, in the script it's written in on the club's own site. */
     .club-name {
-      margin: 0 0 2px;
+      margin: 0 0 7px;
       font-family: "Great Vibes", "Snell Roundhand", "Apple Chancery", cursive;
       font-size: 34px; font-weight: 400; line-height: 1.1; word-spacing: .08em;
     }
     .brand-name {
       margin: 0;
-      font-family: var(--serif); font-weight: 650;
-      font-size: 17px; letter-spacing: .01em; line-height: 1.1; color: #d9c7a4;
+      font-weight: 700; text-transform: uppercase;
+      font-size: 11.5px; letter-spacing: .18em; line-height: 1.1; color: #c8dacd;
     }
 
-    h1 { margin: 0 0 4px; font-family: var(--serif); font-size: 30px; font-weight: 650; text-align: center; }
+    h1 { margin: 0 0 4px; font-size: 28px; font-weight: 800; letter-spacing: -.025em; text-align: center; }
     .sub {
       margin: 0 0 22px; text-align: center; color: var(--muted);
-      font-family: var(--serif); font-style: italic; font-size: 17px; font-weight: 400;
+      font-size: 15px; font-weight: 500;
     }
 
     /* ---------- session pill ---------- */
@@ -88,7 +91,7 @@
     }
     .role-tag {
       font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
-      background: var(--clay); color: #fff; border-radius: 999px; padding: 4px 9px;
+      background: rgba(255,255,255,.14); color: #fff; border-radius: 999px; padding: 4px 9px;
     }
     .linkish {
       border: 0; background: none; padding: 0;
@@ -101,7 +104,7 @@
       display: none; gap: 4px; justify-content: center;
       width: fit-content; margin: 0 auto 24px;
       padding: 4px; border-radius: 999px;
-      background: var(--surface); border: 1px solid var(--border);
+      background: #e9e4d8; border: 0;
     }
     .switch.show { display: flex; }
     .switch button {
@@ -110,29 +113,29 @@
       background: transparent; color: var(--text);
       font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer;
     }
-    .switch button.active { background: var(--green); color: #fff; }
+    .switch button.active { background: var(--surface); color: var(--green); box-shadow: 0 1px 3px rgba(31,42,36,.12); }
 
     /* ---------- cards ---------- */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 22px;
+      border-radius: 20px;
+      padding: 24px;
       margin-bottom: 18px;
-      box-shadow: 0 1px 2px rgba(31,42,36,.04), 0 8px 24px rgba(31,42,36,.05);
+      box-shadow: var(--shadow);
     }
     .card h2 {
       margin: 0 0 16px;
-      font-family: var(--serif); font-size: 21px; font-weight: 650; letter-spacing: -.005em;
+      font-size: 20px; font-weight: 800; letter-spacing: -.02em;
     }
     .card-lede { margin: -10px 0 16px; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
 
     .section-title {
       display: flex; align-items: center; gap: 12px;
       margin: 6px 0 12px;
-      font-family: var(--serif); font-size: 15px; font-weight: 500; color: var(--muted);
+      font-size: 11.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
     }
-    .section-title::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+    .section-title::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 
     label { display: block; margin-bottom: 6px; font-size: 12.5px; font-weight: 700; letter-spacing: .01em; }
     .opt { font-weight: 500; color: var(--muted); }
@@ -140,7 +143,7 @@
       width: 100%;
       padding: 10px 12px;
       border: 1px solid var(--line);
-      border-radius: 10px;
+      border-radius: 12px;
       font-family: inherit;
       font-size: 16px;   /* 16px keeps iOS from zooming the page on focus */
       background: #fff;
@@ -159,6 +162,7 @@
       border: 0; border-radius: 999px;
       background: var(--green); color: #fff;
       font: inherit; font-size: 15px; font-weight: 750; cursor: pointer;
+      box-shadow: 0 2px 8px rgba(31,74,58,.18);
     }
     button.primary:hover { background: var(--green-deep); }
     button.primary:disabled { opacity: .5; cursor: default; }
@@ -168,8 +172,11 @@
       background: var(--surface); color: var(--text);
       font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
     }
+    button.secondary:hover { border-color: #bfb49b; }
     button.go { background: var(--green); border-color: var(--green); color: #fff; }
-    button.clay { background: var(--clay); border-color: var(--clay); color: #fff; }
+    button.clay { background: var(--clay); border-color: var(--clay); color: #fff; box-shadow: 0 2px 8px rgba(47,74,107,.22); }
+    button.go:hover { background: var(--green-deep); }
+    button.clay:hover { background: #243a55; }
     button.warn { color: var(--danger); }
 
     .msg { margin-top: 10px; font-size: 13px; font-weight: 650; }
@@ -179,24 +186,29 @@
     /* ---------- order rows ---------- */
     .orders { margin-top: 4px; }
     .order {
-      border: 3px solid var(--green);
-      border-radius: 14px;
-      padding: 16px 18px;
-      margin-bottom: 12px;
-      background: var(--tint);
+      border: 1.5px solid var(--green);
+      border-radius: 18px;
+      padding: 18px 20px;
+      margin-bottom: 14px;
+      background: var(--surface);
+      box-shadow: 0 1px 2px rgba(31,42,36,.04), 0 4px 14px rgba(31,42,36,.05);
     }
     .order-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
     .order-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
     .order-phone { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; }
-    .order-racket { font-family: var(--serif); font-size: 18px; font-weight: 650; }
+    .order-racket { font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
+    /* Soft tint with a colored dot: the status reads by color without a
+       solid block of it on every card. */
     .badge {
-      font-size: 11.5px; font-weight: 700;
-      padding: 4px 11px; border-radius: 999px;
-      color: #fff; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 700;
+      padding: 4px 10px 4px 9px; border-radius: 999px;
+      white-space: nowrap;
     }
-    .badge.requested { background: var(--waiting); }
-    .badge.in_progress { background: var(--bench); }
-    .badge.finished { background: var(--ready); }
+    .badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .badge.requested { background: #ece8de; color: #5f5b50; }
+    .badge.in_progress { background: #e3e9f2; color: var(--bench); }
+    .badge.finished { background: #e1ede5; color: #2a5e45; }
     .order-line { font-size: 13.5px; color: var(--muted); margin-top: 3px; line-height: 1.45; }
     .order-line b { color: var(--text); font-weight: 700; }
     .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
@@ -215,7 +227,7 @@
     .order-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
     .finish-panel {
       margin-top: 12px; padding: 12px;
-      background: #fff; border: 1px solid var(--border); border-radius: 12px;
+      background: var(--tint); border: 0; border-radius: 12px;
     }
     .finish-title { font-size: 12px; font-weight: 750; color: var(--muted); }
     details.finish-panel > summary {
@@ -237,13 +249,13 @@
 
     /* ---------- scannable card ---------- */
     .order-title { min-width: 0; }
-    .order-who { font-family: var(--serif); font-size: 20px; font-weight: 650; line-height: 1.15; }
+    .order-who { font-size: 19px; font-weight: 800; letter-spacing: -.02em; line-height: 1.2; }
     .order-no { margin-left: 8px; font-family: Manrope, sans-serif; font-size: 13px; font-weight: 700; color: var(--muted); }
     .order-racket-sub { font-size: 14px; font-weight: 600; color: var(--muted); margin-top: 2px; }
     .specs { display: grid; grid-template-columns: 2fr 1fr 1fr 1.2fr; gap: 8px; margin-top: 12px; }
-    .spec { background: #fff; border: 0; border-radius: 12px; padding: 10px 12px; min-width: 0; }
+    .spec { background: var(--tint); border: 0; border-radius: 12px; padding: 10px 12px; min-width: 0; }
     .spec-label { font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
-    .spec-value { font-size: 18px; font-weight: 800; margin-top: 3px; line-height: 1.2; font-variant-numeric: tabular-nums; overflow-wrap: break-word; }
+    .spec-value { font-size: 18px; font-weight: 800; letter-spacing: -.01em; margin-top: 3px; line-height: 1.2; font-variant-numeric: tabular-nums; overflow-wrap: break-word; }
     .spec-sub { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-top: 1px; }
     .order-diff { margin-top: 8px; font-size: 12.5px; font-weight: 600; color: #2a4262; }
     .order .order-note { background: #fffbe9; border-color: #eadfb5; }
@@ -259,10 +271,10 @@
     .stat {
       display: inline-flex; align-items: baseline; gap: 5px;
       padding: 5px 12px; border-radius: 999px;
-      background: var(--waiting); color: #fff;
+      background: #ece8de; color: #5f5b50;
       font-size: 13px; font-weight: 700; white-space: nowrap;
     }
-    .stat.clay { background: var(--bench); }
+    .stat.clay { background: #e3e9f2; color: var(--bench); }
     .stat-n { font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
     @media (max-width: 560px) {
       .specs { grid-template-columns: .9fr .9fr 1.6fr; }
@@ -271,6 +283,8 @@
       .order-top > .badge, .order-right { margin-top: 4px; }
       .specs .spec.wide { grid-column: 1 / -1; }
       .spec-value { font-size: 15.5px; }
+      details.adder summary { flex-wrap: wrap; row-gap: 2px; }
+      details.adder summary .hint { flex-basis: 100%; padding-left: 36px; }
     }
 
     /* ---------- status tracker ---------- */
@@ -302,7 +316,7 @@
     .steps li.now::before { border-color: var(--clay); background: var(--clay); box-shadow: 0 0 0 4px var(--clay-soft); }
     .steps li.now.last::before { border-color: var(--green); background: var(--green); box-shadow: 0 0 0 4px var(--green-soft); }
 
-    .empty { padding: 20px 2px; color: var(--muted); font-family: var(--serif); font-style: italic; font-size: 15px; text-align: center; }
+    .empty { padding: 20px 2px; color: var(--muted); font-size: 14px; font-weight: 500; text-align: center; }
     .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
     .filters button {
       height: 32px; padding: 0 14px;
@@ -316,7 +330,7 @@
     details.adder summary {
       cursor: pointer; list-style: none;
       display: flex; align-items: center; gap: 10px;
-      font-family: var(--serif); font-size: 19px; font-weight: 650;
+      font-size: 17px; font-weight: 800; letter-spacing: -.015em;
     }
     details.adder summary::-webkit-details-marker { display: none; }
     details.adder summary::before {
@@ -364,8 +378,7 @@
       width: 100%; max-width: 390px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-top: 5px solid var(--green);
-      border-radius: 16px;
+      border-radius: 22px;
       padding: 30px 30px 24px;
       box-shadow: 0 12px 34px rgba(31,42,36,.10);
     }
