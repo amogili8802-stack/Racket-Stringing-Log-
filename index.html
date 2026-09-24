@@ -1527,7 +1527,7 @@
       const name = $("loginName").value.trim();
       const memberNumber = $("loginMemberNo").value.trim();
       if (!name) { loginError("Enter your full name so we know whose racket it is."); return; }
-      if (!memberNumber) { loginError("Enter your member number."); return; }
+      if (!memberNumber && !isStaff) { loginError("Enter your member number."); return; }
       if (!auth || !auth.currentUser) { loginError("Sign in again to set your name."); return; }
       const phone = auth.currentUser.phoneNumber;
       $("nameSave").disabled = true;
