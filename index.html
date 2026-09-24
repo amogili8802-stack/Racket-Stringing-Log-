@@ -233,9 +233,7 @@
     .finish-label { font-size: 12.5px; font-weight: 650; color: var(--muted); white-space: nowrap; }
 
     /* ---------- scannable card ---------- */
-    .order-title { min-width: 0; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-    .spec.racket-spec { padding: 6px 12px; }
-    .spec.racket-spec .spec-value { font-size: 16px; margin-top: 1px; }
+    .order-title { min-width: 0; }
     .order-who { font-family: var(--serif); font-size: 20px; font-weight: 650; line-height: 1.15; }
     .order-no { margin-left: 8px; font-family: Manrope, sans-serif; font-size: 13px; font-weight: 700; color: var(--muted); }
     .order-racket-sub { font-size: 14px; font-weight: 600; color: var(--muted); margin-top: 2px; }
@@ -841,9 +839,7 @@
         const name = el("div", "order-who", o.memberName || "Player");
         if (o.memberNumber) name.appendChild(el("span", "order-no", "#" + o.memberNumber));
         title.appendChild(name);
-        // The racket sits beside the name it belongs to, keeping the row
-        // below to the four things set on the machine.
-        title.appendChild(specBox("Racket", o.racket || "—", null, "racket-spec"));
+        title.appendChild(el("div", "order-racket-sub", o.racket || "Racket"));
       } else {
         title.appendChild(el("div", "order-who", o.racket || "Racket"));
       }
