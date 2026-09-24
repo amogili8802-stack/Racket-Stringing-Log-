@@ -600,7 +600,7 @@
                 <input type="text" id="newMemberName" maxlength="60" />
               </div>
               <div class="field">
-                <label for="newMemberNo">Member number</label>
+                <label for="newMemberNo">Member number <span class="opt">(optional)</span></label>
                 <input type="text" id="newMemberNo" maxlength="20" />
               </div>
             </div>
@@ -672,15 +672,9 @@
           <label for="suName">Full name</label>
           <input type="text" id="suName" autocomplete="name" maxlength="60" />
         </div>
-        <div class="grid2">
-          <div class="field">
-            <label for="suPhone">Mobile number</label>
-            <input type="tel" id="suPhone" autocomplete="tel" maxlength="20" />
-          </div>
-          <div class="field">
-            <label for="suMemberNo">Member number <span class="opt">(coaches leave blank)</span></label>
-            <input type="text" id="suMemberNo" maxlength="20" />
-          </div>
+        <div class="field">
+          <label for="suPhone">Mobile number</label>
+          <input type="tel" id="suPhone" autocomplete="tel" maxlength="20" />
         </div>
         <div class="field">
           <label for="suPassword">Password <span class="opt">(at least 8 characters)</span></label>
@@ -722,10 +716,6 @@
           <label for="loginName">Full name</label>
           <input type="text" id="loginName" autocomplete="name" maxlength="60" />
         </div>
-        <div class="field">
-          <label for="loginMemberNo">Member number</label>
-          <input type="text" id="loginMemberNo" maxlength="20" />
-        </div>
         <button type="submit" class="primary" id="nameSave">Continue</button>
       </form>
 
@@ -755,7 +745,7 @@
     // Shown on the login screen. Phones sit on cached copies for a long time,
     // and knowing which build a device is actually running has settled more
     // than one "that fix didn't work" already.
-    const BUILD = "2026-09-24d";
+    const BUILD = "2026-09-24e";
 
     // The stored values predate these labels and are kept so existing orders
     // don't need migrating; what people read is the right-hand side.
@@ -1362,7 +1352,6 @@
       const memberNumber = $("newMemberNo").value.trim();
       const phone = toE164($("newMemberPhone").value);
       if (!name) { msg.textContent = "Give them a full name."; return; }
-      if (!memberNumber) { msg.textContent = "Give them a member number."; return; }
       if (!phone) { msg.textContent = "That doesn't look like a phone number."; return; }
       try {
         await db.collection(MEMBERS).doc(phone).set(
@@ -1525,27 +1514,24 @@
       $("loginScreen").classList.add("show");
       showStep("nameStep", "Your details", "What should we put on your rackets?");
       $("loginName").value = name || "";
-      $("loginMemberNo").value = memberNumber || "";
-      (name ? $("loginMemberNo") : $("loginName")).focus();
+      $("loginName").focus();
     }
 
     async function saveName(e) {
       if (e) e.preventDefault();
       const name = $("loginName").value.trim();
-      const memberNumber = $("loginMemberNo").value.trim();
       if (!name) { loginError("Enter your full name so we know whose racket it is."); return; }
-      if (!memberNumber && !isStaff) { loginError("Enter your member number."); return; }
       if (!auth || !auth.currentUser) { loginError("Sign in again to set your name."); return; }
       const phone = auth.currentUser.phoneNumber;
       $("nameSave").disabled = true;
       try {
         await db.collection(MEMBERS).doc(phone).set(
-          { name, memberNumber, addedByStaff: false, updatedAt: Date.now() }, { merge: true });
+          { name, addedByStaff: false, updatedAt: Date.now() }, { merge: true });
         loginError("");
         // Orders already placed carry the details they were placed under, so
         // bring those along rather than leaving stale ones in the queue.
-        if (currentUser) { currentUser.name = name; currentUser.memberNumber = memberNumber; }
-        await relabelMyOrders(phone, name, memberNumber);
+        if (currentUser) currentUser.name = name;
+        await relabelMyOrders(phone, name);
         await handleAuth(auth.currentUser);
       } catch (err) {
         console.error("saveName", err);
@@ -1555,11 +1541,10 @@
       }
     }
 
-    async function relabelMyOrders(phone, name, memberNumber) {
-      const mine = orders.filter(o => o.memberPhone === phone &&
-        (o.memberName !== name || o.memberNumber !== memberNumber));
+    async function relabelMyOrders(phone, name) {
+      const mine = orders.filter(o => o.memberPhone === phone && o.memberName !== name);
       for (const o of mine) {
-        try { await db.collection(ORDERS).doc(o.id).update({ memberName: name, memberNumber }); }
+        try { await db.collection(ORDERS).doc(o.id).update({ memberName: name }); }
         catch (err) { console.error("relabel order", err); }
       }
     }
@@ -1678,7 +1663,7 @@
       // already added. Ask before letting them order, so their rackets don't
       // arrive labelled with a phone number. Stringers are identified by the
       // staff list and don't carry a member number.
-      if (!name || (!isStaff && !memberNumber)) { showNameStep(name, memberNumber); return; }
+      if (!name) { showNameStep(name, memberNumber); return; }
 
       currentUser = { name, phone, memberNumber };
       remember(currentUser, isStaff);
@@ -1764,12 +1749,10 @@
       e.preventDefault();
       const name = $("suName").value.trim();
       const phone = toE164($("suPhone").value);
-      const memberNumber = $("suMemberNo").value.trim();
+      const memberNumber = "";   // players sign up with name, number and password only
       const password = $("suPassword").value;
       if (!name) { loginError("Enter your full name so we know whose racket it is."); return; }
       if (!phone) { loginError("Enter your mobile number, e.g. (555) 123-4567."); return; }
-      // Left blank here on purpose: coaches don't have one, and a player who
-      // skips it is asked for it once signed in (see handleAuth).
       if (password.length < MIN_PASSWORD) { loginError("Use at least " + MIN_PASSWORD + " characters for your password."); return; }
       flow = { kind: "signup", phone, name, memberNumber, password };
       await sendCode(phone, $("signupSubmit"));
