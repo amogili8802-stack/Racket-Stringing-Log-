@@ -244,9 +244,6 @@
     .spec-label { font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
     .spec-value { font-size: 18px; font-weight: 800; margin-top: 3px; line-height: 1.2; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
     .spec-sub { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-top: 1px; }
-    .spec.flag { background: var(--clay-soft); border-color: #eccdb9; }
-    .spec.flag .spec-value { color: #8a4424; }
-    .spec.none .spec-value { color: var(--muted); font-weight: 600; }
     .order-diff { margin-top: 8px; font-size: 12.5px; font-weight: 600; color: #8a4424; }
     .order .order-note { background: #fffbe9; border-color: #eadfb5; }
     /* Coaches must not miss a note (a cracked grommet, a grip color), so it
@@ -863,7 +860,7 @@
       const grip = GRIP_LABEL[o.grip];
       const gripShort = { overgrip: "Overgrip", replacement: "Replacement" }[o.grip];
       specs.appendChild(specBox("Grip", gripShort || "No change",
-        gripShort ? "new grip on" : null, gripShort ? "flag" : "none"));
+        gripShort ? "new grip on" : null));
       card.appendChild(specs);
 
       if (done) {
