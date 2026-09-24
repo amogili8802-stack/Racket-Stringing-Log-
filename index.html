@@ -233,12 +233,13 @@
     .finish-label { font-size: 12.5px; font-weight: 650; color: var(--muted); white-space: nowrap; }
 
     /* ---------- scannable card ---------- */
-    .order-title { min-width: 0; }
+    .order-title { min-width: 0; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .spec.racket-spec { padding: 6px 12px; }
+    .spec.racket-spec .spec-value { font-size: 16px; margin-top: 1px; }
     .order-who { font-family: var(--serif); font-size: 20px; font-weight: 650; line-height: 1.15; }
     .order-no { margin-left: 8px; font-family: Manrope, sans-serif; font-size: 13px; font-weight: 700; color: var(--muted); }
     .order-racket-sub { font-size: 14px; font-weight: 600; color: var(--muted); margin-top: 2px; }
     .specs { display: grid; grid-template-columns: 2fr 1fr 1fr 1.2fr; gap: 8px; margin-top: 12px; }
-    .specs.with-racket { grid-template-columns: 1.5fr 1.5fr .85fr .85fr 1.45fr; }
     .spec { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; min-width: 0; }
     .spec-label { font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
     .spec-value { font-size: 18px; font-weight: 800; margin-top: 3px; line-height: 1.2; font-variant-numeric: tabular-nums; overflow-wrap: break-word; }
@@ -256,16 +257,11 @@
     .stat-label { font-size: 12px; font-weight: 700; color: var(--muted); margin-top: 4px; }
     .stat.clay .stat-n { color: var(--clay); }
     @media (max-width: 560px) {
-      .specs { grid-template-columns: 1fr 1fr 1fr; }
+      .specs { grid-template-columns: .9fr .9fr 1.6fr; }
+      .spec { padding: 8px 10px; }
+      .order-top { flex-wrap: nowrap; align-items: flex-start; }
+      .order-top .badge { margin-top: 4px; }
       .specs .spec.wide { grid-column: 1 / -1; }
-      /* On a phone the racket and string share the top row, the numbers and
-         grip the one under it. */
-      .specs.with-racket { grid-template-columns: repeat(12, 1fr); }
-      .specs.with-racket .spec { grid-column: span 3; }
-      .specs.with-racket .spec.wide { grid-column: span 6; }
-      .specs.with-racket .spec:last-child { grid-column: span 6; }
-      .spec { padding: 8px 9px; }
-      .spec-label { font-size: 9.5px; letter-spacing: .04em; }
       .spec-value { font-size: 15.5px; }
       .stat { padding: 8px 10px; }
       .stat-n { font-size: 24px; }
@@ -845,6 +841,9 @@
         const name = el("div", "order-who", o.memberName || "Player");
         if (o.memberNumber) name.appendChild(el("span", "order-no", "#" + o.memberNumber));
         title.appendChild(name);
+        // The racket sits beside the name it belongs to, keeping the row
+        // below to the four things set on the machine.
+        title.appendChild(specBox("Racket", o.racket || "—", null, "racket-spec"));
       } else {
         title.appendChild(el("div", "order-who", o.racket || "Racket"));
       }
@@ -859,10 +858,7 @@
       const str = done ? (o.actualString || o.stringName) : o.stringName;
       const mains = done ? (o.actualTension || o.tension) : o.tension;
       const cross = done ? (o.actualTensionCross != null ? o.actualTensionCross : o.tensionCross) : o.tensionCross;
-      // Coaches get the racket as the first box of the row; players already
-      // see it as the card's title.
-      const specs = el("div", "specs" + (forStaff ? " with-racket" : ""));
-      if (forStaff) specs.appendChild(specBox("Racket", o.racket || "—", null, "wide"));
+      const specs = el("div", "specs");
       specs.appendChild(specBox("String", str || "—", null, "wide"));
       // Two boxes, even when they match, so nobody has to work out which
       // number is which at the machine.
