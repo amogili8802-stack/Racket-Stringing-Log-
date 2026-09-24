@@ -217,7 +217,16 @@
       margin-top: 12px; padding: 12px;
       background: #fff; border: 1px solid var(--border); border-radius: 12px;
     }
-    .finish-title { font-size: 12px; font-weight: 750; margin-bottom: 8px; color: var(--muted); }
+    .finish-title { font-size: 12px; font-weight: 750; color: var(--muted); }
+    details.finish-panel > summary {
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; list-style: none;
+    }
+    details.finish-panel > summary::-webkit-details-marker { display: none; }
+    details.finish-panel > summary::after { content: "▾"; font-size: 14px; color: var(--text); }
+    details.finish-panel[open] > summary::after { content: "▴"; }
+    details.finish-panel[open] > summary { margin-bottom: 8px; }
+    .strung-row { margin-top: 12px; max-width: 320px; }
     .finish-row { display: flex; gap: 7px; align-items: center; margin-bottom: 7px; }
     .finish-row:last-child { margin-bottom: 0; }
     .finish-row input, .finish-row select { padding: 8px 10px; font-size: 14px; }
@@ -734,6 +743,7 @@
     const STATUS_ORDER = ["requested", "in_progress", "finished"];
     // Who strings rackets, for the "Strung by" picker.
     const STRINGERS = ["Byron", "Alena"];
+    const openPanels = new Set();   // order ids whose "What went on it" is unfolded
     const GRIP_LABEL = {
       overgrip: "New overgrip",
       replacement: "New replacement grip"
@@ -894,8 +904,16 @@
       // right when they press finish rather than being reconstructed after.
       let panel = null;
       if (forStaff && o.status === "in_progress") {
-        panel = el("div", "finish-panel");
-        panel.appendChild(el("div", "finish-title", "What went on it (change if different)"));
+        // Folded away by default: most rackets go on exactly as asked, so the
+        // corrections only come out when something changed. Kept open across
+        // redraws once a coach opens it.
+        panel = el("details", "finish-panel");
+        panel.open = openPanels.has(o.id);
+        panel.addEventListener("toggle", () => {
+          if (panel.open) openPanels.add(o.id); else openPanels.delete(o.id);
+        });
+        const summary = el("summary", "finish-title", "What went on it (change if different)");
+        panel.appendChild(summary);
         const row = el("div", "finish-row");
         const sIn = el("input");
         sIn.type = "text"; sIn.placeholder = "String"; sIn.value = o.actualString || o.stringName || "";
@@ -908,10 +926,11 @@
                   : (o.tensionCross != null ? o.tensionCross : (o.tension || ""));
         row.appendChild(sIn); row.appendChild(tIn); row.appendChild(cIn);
         panel.appendChild(row);
+        card.appendChild(panel);
 
         // Picked every time rather than defaulted, so a racket is never
         // credited to whoever happened to be logged in.
-        const byRow = el("div", "finish-row");
+        const byRow = el("div", "finish-row strung-row");
         const byLabel = el("span", "finish-label", "Strung by");
         const sel = el("select");
         for (const n of ["", ...STRINGERS]) {
@@ -921,10 +940,9 @@
           sel.appendChild(opt);
         }
         byRow.appendChild(byLabel); byRow.appendChild(sel);
-        panel.appendChild(byRow);
+        card.appendChild(byRow);
         const err = el("div", "msg err");
-        panel.appendChild(err);
-        card.appendChild(panel);
+        card.appendChild(err);
         panel._fields = { sIn, tIn, cIn, sel, err };
       }
 
