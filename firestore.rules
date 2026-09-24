@@ -110,12 +110,13 @@ service cloud.firestore {
             && request.resource.data.strungByName == null
             && request.resource.data.finishedAt == null);
 
-      // A member can withdraw a request nobody has started on. Once it's on
-      // the bench it's the stringers' call.
+      // A member can delete their own racket (a request made by mistake, or
+      // an old finished one) except while it's being strung; then it's the
+      // stringers' call. Staff can delete anything.
       allow delete: if isStaff()
         || (signedIn()
             && resource.data.memberPhone == callerPhone()
-            && resource.data.status == "requested");
+            && resource.data.status != "in_progress");
     }
 
     // Anything not named above stays closed.

@@ -755,7 +755,7 @@
     // Shown on the login screen. Phones sit on cached copies for a long time,
     // and knowing which build a device is actually running has settled more
     // than one "that fix didn't work" already.
-    const BUILD = "2026-09-24c";
+    const BUILD = "2026-09-24d";
 
     // The stored values predate these labels and are kept so existing orders
     // don't need migrating; what people read is the right-hand side.
@@ -995,10 +995,13 @@
           back.addEventListener("click", () => setStatus(o, "in_progress"));
           actions.appendChild(back);
         }
-      } else if (o.status === "requested") {
-        const cancel = el("button", "secondary warn", "Cancel request");
-        cancel.addEventListener("click", () => cancelOrder(o));
-        actions.appendChild(cancel);
+      }
+      // For entries made by mistake. Players can't pull a racket that's
+      // already on the bench; coaches can remove anything.
+      if (forStaff || o.status !== "in_progress") {
+        const del = el("button", "secondary warn", "Delete");
+        del.addEventListener("click", () => deleteOrder(o, forStaff));
+        actions.appendChild(del);
       }
       if (actions.children.length) card.appendChild(actions);
 
@@ -1339,12 +1342,16 @@
       }
     }
 
-    async function cancelOrder(order) {
-      if (order.status !== "requested") return;
+    async function deleteOrder(order, forStaff) {
+      if (!forStaff && order.status === "in_progress") return;
+      const what = order.racket || "this racket";
+      const whose = forStaff && order.memberName ? " for " + order.memberName : "";
+      if (!confirm("Delete " + what + whose + "? This can't be undone.")) return;
       try {
         await db.collection(ORDERS).doc(order.id).delete();
       } catch (err) {
-        console.error("cancelOrder", err);
+        console.error("deleteOrder", err);
+        alert("Couldn't delete that racket. Check your connection and try again.");
       }
     }
 
