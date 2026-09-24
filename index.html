@@ -186,6 +186,8 @@
       background: var(--tint);
     }
     .order-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+    .order-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+    .order-phone { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; }
     .order-racket { font-family: var(--serif); font-size: 18px; font-weight: 650; }
     .badge {
       font-size: 11.5px; font-weight: 700;
@@ -265,7 +267,7 @@
       .specs { grid-template-columns: .9fr .9fr 1.6fr; }
       .spec { padding: 8px 10px; }
       .order-top { flex-wrap: nowrap; align-items: flex-start; }
-      .order-top .badge { margin-top: 4px; }
+      .order-top > .badge, .order-right { margin-top: 4px; }
       .specs .spec.wide { grid-column: 1 / -1; }
       .spec-value { font-size: 15.5px; }
     }
@@ -851,7 +853,15 @@
         title.appendChild(el("div", "order-who", o.racket || "Racket"));
       }
       top.appendChild(title);
-      top.appendChild(el("span", "badge " + o.status, STATUS_LABEL[o.status] || o.status));
+      const badge = el("span", "badge " + o.status, STATUS_LABEL[o.status] || o.status);
+      if (forStaff && o.memberPhone) {
+        const right = el("div", "order-right");
+        right.appendChild(el("div", "order-phone", prettyPhone(o.memberPhone)));
+        right.appendChild(badge);
+        top.appendChild(right);
+      } else {
+        top.appendChild(badge);
+      }
       card.appendChild(top);
       // "Where's my racket" is the question a player opens this to answer.
       if (!forStaff && !done) card.appendChild(statusSteps(o.status));
@@ -894,12 +904,10 @@
           "Drop-off " + fmtDate(o.dropOffDate) + (o.dropOffSlot ? ", " + slotLabel(o.dropOffSlot) : "")));
       }
       if (forStaff) {
-        if (o.status === "in_progress" && o.startedByName) meta.appendChild(el("span", "chip plain", "Started by " + o.startedByName));
         if (done && o.strungByName) meta.appendChild(el("span", "chip plain",
           "Strung by " + o.strungByName + (o.finishedAt ? ", " + fmtDate(ymd(new Date(o.finishedAt))) : "")));
         if (done && o.notifyError) meta.appendChild(el("span", "chip urgent", "Text didn't send: " + o.notifyError));
         else if (done && o.notifiedAt) meta.appendChild(el("span", "chip", "Player texted"));
-        if (o.memberPhone) meta.appendChild(el("span", "chip plain", prettyPhone(o.memberPhone)));
       } else if (done && o.finishedAt) {
         meta.appendChild(el("span", "chip plain", "Finished " + fmtDate(ymd(new Date(o.finishedAt)))));
       } else if (o.status === "requested" && o.createdAt) {
