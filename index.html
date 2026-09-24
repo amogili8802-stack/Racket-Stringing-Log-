@@ -243,6 +243,7 @@
     /* Coaches must not miss a note (a cracked grommet, a grip color), so it
        gets a hard black outline on their side. */
     .order .order-note.staff { border: 1px solid #111; }
+    .order.staff .spec { border: 1px solid #111; }
     .chip.plain { background: transparent; border: 1px solid var(--line); color: var(--muted); }
     .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
     .stat { background: var(--tint); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; }
@@ -817,7 +818,7 @@
 
     function orderCard(o, forStaff) {
       const done = o.status === "finished";
-      const card = el("div", "order " + o.status);
+      const card = el("div", "order " + o.status + (forStaff ? " staff" : ""));
 
       // Coaches look for the person; players already know who they are and
       // look for the racket.
