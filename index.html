@@ -356,6 +356,9 @@
     .login-card h1 { font-size: 26px; margin-bottom: 4px; }
     .login-note { margin-top: 16px; font-size: 12px; color: var(--muted); text-align: center; line-height: 1.5; }
     .login-build { margin-top: 10px; text-align: center; font-size: 11px; color: var(--muted); opacity: .7; }
+    .login-links { display: flex; justify-content: space-between; gap: 10px; margin-top: 6px; }
+    .login-links .login-back { width: auto; }
+    .login-hint { margin: 10px 0 0; font-size: 12.5px; color: var(--muted); text-align: center; }
     .login-back { width: 100%; margin-top: 10px; background: none; border: 0; color: var(--muted); font: inherit; font-size: 13px; text-decoration: underline; cursor: pointer; }
 
     @media (max-width: 560px) {
@@ -610,16 +613,57 @@
       <div class="brand">
         <span class="brand-name">Racket Stringing</span>
       </div>
-      <h1>Sign in</h1>
-      <p class="sub" id="loginSub">We'll text you a code.</p>
+      <h1 id="loginTitle">Log in</h1>
+      <p class="sub" id="loginSub">Use your mobile number and password.</p>
       <div class="msg err" id="loginError"></div>
 
-      <form id="phoneStep" novalidate>
+      <form id="loginStep" novalidate>
         <div class="field">
-          <label for="loginPhone">Phone number</label>
-          <input type="tel" id="loginPhone" autocomplete="tel" maxlength="20" placeholder="(555) 123-4567" />
+          <label for="loginPhone">Mobile number</label>
+          <input type="tel" id="loginPhone" autocomplete="username" maxlength="20" placeholder="(555) 123-4567" />
         </div>
-        <button type="submit" class="primary" id="phoneNext">Next</button>
+        <div class="field">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" autocomplete="current-password" maxlength="100" />
+        </div>
+        <button type="submit" class="primary" id="loginSubmit">Log in</button>
+        <div class="login-links">
+          <button type="button" class="login-back" id="toSignup">Create an account</button>
+          <button type="button" class="login-back" id="toForgot">Forgot password?</button>
+        </div>
+      </form>
+
+      <form id="signupStep" novalidate hidden>
+        <div class="field">
+          <label for="suName">Full name</label>
+          <input type="text" id="suName" autocomplete="name" maxlength="60" placeholder="Jordan Vega" />
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label for="suPhone">Mobile number</label>
+            <input type="tel" id="suPhone" autocomplete="tel" maxlength="20" placeholder="(555) 123-4567" />
+          </div>
+          <div class="field">
+            <label for="suMemberNo">Member number</label>
+            <input type="text" id="suMemberNo" maxlength="20" placeholder="1042" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="suPassword">Password <span class="opt">(at least 8 characters)</span></label>
+          <input type="password" id="suPassword" autocomplete="new-password" maxlength="100" />
+        </div>
+        <button type="submit" class="primary" id="signupSubmit">Create account</button>
+        <p class="login-hint">We'll text a code to confirm the number is yours.</p>
+        <button type="button" class="login-back" id="signupBack">I already have an account</button>
+      </form>
+
+      <form id="forgotStep" novalidate hidden>
+        <div class="field">
+          <label for="fpPhone">Mobile number</label>
+          <input type="tel" id="fpPhone" autocomplete="tel" maxlength="20" placeholder="(555) 123-4567" />
+        </div>
+        <button type="submit" class="primary" id="forgotSubmit">Text me a code</button>
+        <button type="button" class="login-back" id="forgotBack">Back to log in</button>
       </form>
 
       <form id="codeStep" novalidate hidden>
@@ -628,7 +672,15 @@
           <input type="text" id="loginCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" />
         </div>
         <button type="submit" class="primary" id="codeVerify">Verify</button>
-        <button type="button" class="login-back" id="codeBack">Use a different number</button>
+        <button type="button" class="login-back" id="codeBack">Start over</button>
+      </form>
+
+      <form id="newPassStep" novalidate hidden>
+        <div class="field">
+          <label for="npPassword">New password <span class="opt">(at least 8 characters)</span></label>
+          <input type="password" id="npPassword" autocomplete="new-password" maxlength="100" />
+        </div>
+        <button type="submit" class="primary" id="newPassSubmit">Save password</button>
       </form>
 
       <form id="nameStep" novalidate hidden>
@@ -669,7 +721,7 @@
     // Shown on the login screen. Phones sit on cached copies for a long time,
     // and knowing which build a device is actually running has settled more
     // than one "that fix didn't work" already.
-    const BUILD = "2026-09-24a";
+    const BUILD = "2026-09-24b";
 
     // The stored values predate these labels and are kept so existing orders
     // don't need migrating; what people read is the right-hand side.
@@ -1400,9 +1452,9 @@
       $("memberView").hidden = true;
       $("staffView").hidden = true;
       $("loginScreen").classList.add("show");
-      showPhoneStep();
-      $("phoneNext").disabled = Boolean(checking);
-      $("phoneNext").textContent = checking ? "Checking sign-in…" : "Next";
+      showStep("loginStep", "Log in", "Use your mobile number and password.");
+      $("loginSubmit").disabled = Boolean(checking);
+      $("loginSubmit").textContent = checking ? "Checking sign-in…" : "Log in";
     }
     function showApp() {
       loginError("");
@@ -1419,28 +1471,18 @@
     function loginError(text) {
       $("loginError").textContent = text || "";
     }
-    function showPhoneStep() {
-      confirmationResult = null;
-      $("codeStep").hidden = true;
-      $("nameStep").hidden = true;
-      $("phoneStep").hidden = false;
-      $("loginCode").value = "";
-    }
-    function showCodeStep() {
-      $("phoneStep").hidden = true;
-      $("nameStep").hidden = true;
-      $("codeStep").hidden = false;
-      $("loginCode").focus();
+    const LOGIN_STEPS = ["loginStep", "signupStep", "forgotStep", "codeStep", "newPassStep", "nameStep"];
+    function showStep(id, title, sub) {
+      LOGIN_STEPS.forEach(s => { $(s).hidden = s !== id; });
+      if (title) $("loginTitle").textContent = title;
+      if (sub != null) $("loginSub").textContent = sub;
     }
     // Asked once, the first time somebody signs in without a name already on
     // record. Without it their rackets reach the bench labelled with a phone
     // number, which tells whoever is stringing nothing.
     function showNameStep(name, memberNumber) {
       $("loginScreen").classList.add("show");
-      $("phoneStep").hidden = true;
-      $("codeStep").hidden = true;
-      $("nameStep").hidden = false;
-      $("loginSub").textContent = "What should we put on your rackets?";
+      showStep("nameStep", "Your details", "What should we put on your rackets?");
       $("loginName").value = name || "";
       $("loginMemberNo").value = memberNumber || "";
       (name ? $("loginMemberNo") : $("loginName")).focus();
@@ -1511,7 +1553,7 @@
       endSession();
       noteSessionEnd("credential-gone");
       $("loginPhone").value = prettyPhone(saved.phone);
-      loginError("Your browser cleared this site's saved sign-in. Nobody logged you out — your number's filled in, a new code brings you back.");
+      loginError("Your browser cleared this site's saved sign-in. Nobody logged you out — your number's filled in, just enter your password.");
     }
 
     function clearRecheck() {
@@ -1546,6 +1588,9 @@
     }
 
     async function handleAuth(user) {
+      // Mid-way through making an account or resetting a password; the flow
+      // calls back in here itself once it has finished.
+      if (flow) return;
       const gen = ++authGeneration;
       clearRecheck();
       if (!user) { handleAuthGone(); return; }
@@ -1603,6 +1648,26 @@
     }
 
     // ---------- sign-in ----------
+    // Players log in with their mobile number and a password. Firebase has no
+    // "phone + password" sign-in, so each account is one Firebase user with
+    // two ways in: the phone number itself (proved by a texted code, once, when
+    // the account is made or the password is reset) and an email/password
+    // login whose "email" is made from that number. Nobody ever sees or gets
+    // mail at that address; it's just the key the password hangs on. Because
+    // the phone number stays on the account, the token still carries it, and
+    // the Firestore rules keep working exactly as they did.
+    const PASSWORD_DOMAIN = "phone.racket-stringing-log.web.app";
+    const MIN_PASSWORD = 8;
+    function passwordEmail(phone) {
+      return phone.replace(/\D/g, "") + "@" + PASSWORD_DOMAIN;
+    }
+
+    // Set while an account is being made or a password reset: signing in with
+    // the texted code fires onAuthStateChanged before the password and name
+    // have been saved, and handleAuth must wait for those rather than asking
+    // for a name the person has just typed.
+    let flow = null;             // { kind: "signup" | "reset", phone, name, memberNumber, password }
+
     function getRecaptcha() {
       if (!recaptcha) {
         recaptcha = new firebase.auth.RecaptchaVerifier("recaptchaContainer", { size: "invisible" });
@@ -1616,25 +1681,78 @@
         if (window.grecaptcha) window.grecaptcha.reset(id);
       } catch (e) { console.error("recaptcha reset", e); }
     }
+    function busy(btn, text) {
+      btn.dataset.label = btn.dataset.label || btn.textContent;
+      btn.disabled = Boolean(text);
+      btn.textContent = text || btn.dataset.label;
+    }
 
-    async function sendCode(raw) {
-      const phone = toE164(raw);
-      if (!phone) {
-        loginError("That doesn't look like a phone number. Try a 10-digit US number.");
-        return;
-      }
+    async function logIn(e) {
+      e.preventDefault();
+      const phone = toE164($("loginPhone").value);
+      const password = $("loginPassword").value;
+      if (!phone) { loginError("Enter your mobile number, e.g. (555) 123-4567."); return; }
+      if (!password) { loginError("Enter your password."); return; }
       loginError("");
-      $("phoneNext").disabled = true;
-      $("phoneNext").textContent = "Sending…";
+      busy($("loginSubmit"), "Logging in…");
+      try {
+        await auth.signInWithEmailAndPassword(passwordEmail(phone), password);
+        // handleAuth takes it from here, via onAuthStateChanged.
+      } catch (err) {
+        console.error("logIn", err);
+        const c = err && err.code;
+        if (c === "auth/invalid-credential" || c === "auth/wrong-password" ||
+            c === "auth/user-not-found" || c === "auth/invalid-login-credentials" ||
+            c === "auth/invalid-email") {
+          loginError("That number and password don't match. New here? Create an account. Forgot it? Reset it with a text.");
+        } else if (c === "auth/too-many-requests") {
+          loginError("Too many tries for this number. Wait a few minutes, or reset your password.");
+        } else if (c === "auth/operation-not-allowed") {
+          loginError("Password log-in isn't switched on for this project. Firebase → Authentication → Sign-in method → Email/Password → Enable.");
+        } else {
+          loginError("Couldn't log in — Firebase said: " + (c || (err && err.message) || "no reason given") +
+            ". Check your connection and try again.");
+        }
+      } finally {
+        busy($("loginSubmit"));
+      }
+    }
+
+    async function startSignup(e) {
+      e.preventDefault();
+      const name = $("suName").value.trim();
+      const phone = toE164($("suPhone").value);
+      const memberNumber = $("suMemberNo").value.trim();
+      const password = $("suPassword").value;
+      if (!name) { loginError("Enter your full name so we know whose racket it is."); return; }
+      if (!phone) { loginError("Enter your mobile number, e.g. (555) 123-4567."); return; }
+      if (!memberNumber) { loginError("Enter your member number."); return; }
+      if (password.length < MIN_PASSWORD) { loginError("Use at least " + MIN_PASSWORD + " characters for your password."); return; }
+      flow = { kind: "signup", phone, name, memberNumber, password };
+      await sendCode(phone, $("signupSubmit"));
+    }
+
+    async function startReset(e) {
+      e.preventDefault();
+      const phone = toE164($("fpPhone").value);
+      if (!phone) { loginError("Enter your mobile number, e.g. (555) 123-4567."); return; }
+      flow = { kind: "reset", phone };
+      await sendCode(phone, $("forgotSubmit"));
+    }
+
+    async function sendCode(phone, btn) {
+      loginError("");
+      busy(btn, "Sending…");
       try {
         confirmationResult = await auth.signInWithPhoneNumber(phone, getRecaptcha());
-        $("loginSub").textContent = "Code sent to " + prettyPhone(phone) + ".";
-        showCodeStep();
+        showStep("codeStep", "Enter the code", "We texted a code to " + prettyPhone(phone) + ".");
+        $("loginCode").focus();
       } catch (e) {
         console.error("sendCode", e);
+        flow = null;
         await resetRecaptcha();
         if (e.code === "auth/too-many-requests") {
-          loginError("Too many sign-in attempts for this number. Firebase pauses new codes for a while — it lifts on its own, usually within an hour.");
+          loginError("Too many codes for this number. Firebase pauses new ones for a while — it lifts on its own, usually within an hour.");
         } else if (e.code === "auth/invalid-phone-number") {
           loginError("Firebase didn't accept that number. Check the digits.");
         } else if (e.code === "auth/unauthorized-domain" || e.code === "auth/captcha-check-failed") {
@@ -1652,30 +1770,112 @@
             ". Tell whoever set this up.");
         }
       } finally {
-        $("phoneNext").disabled = false;
-        $("phoneNext").textContent = "Next";
+        busy(btn);
       }
     }
 
-    async function verifyCode(raw) {
-      const code = (raw || "").replace(/\D/g, "");
-      if (!confirmationResult) { showPhoneStep(); return; }
+    async function verifyCode(e) {
+      e.preventDefault();
+      const code = ($("loginCode").value || "").replace(/\D/g, "");
+      if (!confirmationResult || !flow) { cancelFlow(); return; }
       if (code.length !== 6) { loginError("Enter the 6-digit code."); return; }
       loginError("");
-      $("codeVerify").disabled = true;
-      $("codeVerify").textContent = "Verifying…";
+      busy($("codeVerify"), "Verifying…");
+      let user;
       try {
-        await confirmationResult.confirm(code);
-        // handleAuth takes it from here, via onAuthStateChanged.
-      } catch (e) {
-        console.error("verifyCode", e);
-        loginError(e.code === "auth/invalid-verification-code"
+        user = (await confirmationResult.confirm(code)).user;
+      } catch (err) {
+        console.error("verifyCode", err);
+        loginError(err.code === "auth/invalid-verification-code"
           ? "That code didn't match. Check the digits and try again."
           : "Couldn't verify that code. Try again.");
-      } finally {
-        $("codeVerify").disabled = false;
-        $("codeVerify").textContent = "Verify";
+        busy($("codeVerify"));
+        return;
       }
+      busy($("codeVerify"));
+      $("loginCode").value = "";
+
+      if (flow.kind === "reset") {
+        showStep("newPassStep", "Choose a new password", "For " + prettyPhone(flow.phone) + ".");
+        $("npPassword").focus();
+        return;
+      }
+      try {
+        await setPassword(user, flow.phone, flow.password);
+        await db.collection(MEMBERS).doc(user.phoneNumber).set(
+          { name: flow.name, memberNumber: flow.memberNumber, addedByStaff: false, updatedAt: Date.now() },
+          { merge: true });
+        finishFlow(user);
+      } catch (err) {
+        // The number is confirmed and they're signed in; only the password
+        // (or the name) didn't stick. Let them set it here rather than
+        // starting again and being texted a second code.
+        console.error("finish signup", err);
+        flow = { ...flow, kind: "reset" };
+        showStep("newPassStep", "Choose a password", "Your number is confirmed. Pick a password to finish.");
+        loginError(passwordProblem(err));
+      }
+    }
+
+    async function saveNewPassword(e) {
+      e.preventDefault();
+      const password = $("npPassword").value;
+      const user = auth && auth.currentUser;
+      if (!user || !flow) { cancelFlow(); return; }
+      if (password.length < MIN_PASSWORD) { loginError("Use at least " + MIN_PASSWORD + " characters for your password."); return; }
+      loginError("");
+      busy($("newPassSubmit"), "Saving…");
+      try {
+        await setPassword(user, flow.phone, password);
+        if (flow.name) {
+          await db.collection(MEMBERS).doc(user.phoneNumber).set(
+            { name: flow.name, memberNumber: flow.memberNumber || "", addedByStaff: false, updatedAt: Date.now() },
+            { merge: true });
+        }
+        $("npPassword").value = "";
+        finishFlow(user);
+      } catch (err) {
+        console.error("saveNewPassword", err);
+        loginError(passwordProblem(err));
+      } finally {
+        busy($("newPassSubmit"));
+      }
+    }
+
+    // An account made before passwords existed has only the phone number, so
+    // its first password is attached rather than changed.
+    async function setPassword(user, phone, password) {
+      const hasPassword = (user.providerData || []).some(p => p && p.providerId === "password");
+      if (hasPassword) {
+        await user.updatePassword(password);
+      } else {
+        await user.linkWithCredential(
+          firebase.auth.EmailAuthProvider.credential(passwordEmail(phone), password));
+      }
+    }
+    function passwordProblem(err) {
+      const c = err && err.code;
+      if (c === "auth/weak-password") return "That password is too easy to guess. Try a longer one.";
+      if (c === "auth/operation-not-allowed") {
+        return "Password log-in isn't switched on for this project. Firebase → Authentication → Sign-in method → Email/Password → Enable.";
+      }
+      return "Couldn't save the password — Firebase said: " + (c || (err && err.message) || "no reason given") + ".";
+    }
+
+    function finishFlow(user) {
+      flow = null;
+      confirmationResult = null;
+      $("suPassword").value = "";
+      handleAuth(user);
+    }
+    // Backing out part-way. If the code was already accepted they're signed
+    // in, so carry on into the app rather than leaving them on a dead form.
+    function cancelFlow() {
+      flow = null;
+      confirmationResult = null;
+      loginError("");
+      if (auth && auth.currentUser) { handleAuth(auth.currentUser); return; }
+      showStep("loginStep", "Log in", "Use your mobile number and password.");
     }
 
     function logout() {
@@ -1722,9 +1922,27 @@
       }
     }
 
-    $("phoneStep").addEventListener("submit", e => { e.preventDefault(); sendCode($("loginPhone").value); });
-    $("codeStep").addEventListener("submit", e => { e.preventDefault(); verifyCode($("loginCode").value); });
-    $("codeBack").addEventListener("click", () => { showPhoneStep(); loginError(""); $("loginPhone").focus(); });
+    $("loginStep").addEventListener("submit", logIn);
+    $("signupStep").addEventListener("submit", startSignup);
+    $("forgotStep").addEventListener("submit", startReset);
+    $("codeStep").addEventListener("submit", verifyCode);
+    $("newPassStep").addEventListener("submit", saveNewPassword);
+    $("codeBack").addEventListener("click", cancelFlow);
+    const toLogin = () => { loginError(""); showStep("loginStep", "Log in", "Use your mobile number and password."); };
+    $("signupBack").addEventListener("click", toLogin);
+    $("forgotBack").addEventListener("click", toLogin);
+    $("toSignup").addEventListener("click", () => {
+      loginError("");
+      if (!$("suPhone").value) $("suPhone").value = $("loginPhone").value;
+      showStep("signupStep", "Create an account", "You'll log in with your number and this password.");
+      $("suName").focus();
+    });
+    $("toForgot").addEventListener("click", () => {
+      loginError("");
+      if (!$("fpPhone").value) $("fpPhone").value = $("loginPhone").value;
+      showStep("forgotStep", "Reset your password", "We'll text a code to the number on your account.");
+      $("fpPhone").focus();
+    });
     $("logoutBtn").addEventListener("click", logout);
     $("nameStep").addEventListener("submit", saveName);
     $("sessionName").addEventListener("click", () => {

@@ -18,6 +18,15 @@ piece that can't run in a browser: sending the text.
 
 ## Who sees what
 
+**Signing in** — players create an account with their name, member number,
+mobile number and a password, then log in with number + password. Creating an
+account and "Forgot password?" both text a one-time code to prove the number
+belongs to them. Under the hood each account is one Firebase user with the
+phone number attached plus an email/password login whose "email" is built from
+the number (`15551234567@phone.racket-stringing-log.web.app`, never mailed), so
+the ID token still carries `phone_number` and the rules below are unchanged.
+Anyone who signed in before passwords existed sets one with "Forgot password?".
+
 **Members** — anyone who signs in with a phone number. They place orders in
 their own name and see only their own rackets, including any a coach entered
 under their number before they ever signed in. No roster has to be maintained;
@@ -77,7 +86,12 @@ no staff view. The console itself always keeps working.
 > out — if the two ever share a project, the rule sets have to be merged into
 > one file first.
 
-### 2. Texts
+### 2. Sign-in methods
+
+Firebase console → Authentication → Sign-in method → enable both **Phone**
+(for the confirmation codes) and **Email/Password** (for the passwords).
+
+### 3. Texts
 
 Sending SMS needs the project on the **Blaze** plan (functions don't run on the
 free tier) and a Twilio account. Costs are about $1.15/month for the number and
@@ -101,7 +115,7 @@ cd functions && npm install && cd ..
 firebase deploy --only functions
 ```
 
-### 3. Authorised domains
+### 4. Authorised domains
 
 Firebase console → Authentication → Settings → Authorised domains → add
 whatever host the site is served from, or phone sign-in is refused there.
