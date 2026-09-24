@@ -225,11 +225,44 @@
     .finish-row input + input { flex: 1 1 22%; min-width: 74px; }
     .finish-label { font-size: 12.5px; font-weight: 650; color: var(--muted); white-space: nowrap; }
 
+    /* ---------- scannable card ---------- */
+    .order-title { min-width: 0; }
+    .order-who { font-family: var(--serif); font-size: 20px; font-weight: 650; line-height: 1.15; }
+    .order-no { margin-left: 8px; font-family: Manrope, sans-serif; font-size: 13px; font-weight: 700; color: var(--muted); }
+    .order-racket-sub { font-size: 14px; font-weight: 600; color: var(--muted); margin-top: 2px; }
+    .order.in_progress { border-left: 4px solid var(--clay); }
+    .order.requested { border-left: 4px solid var(--waiting); }
+    .order.finished { border-left: 4px solid var(--ready); }
+    .specs { display: grid; grid-template-columns: 2fr 1.1fr 1.1fr; gap: 8px; margin-top: 12px; }
+    .spec { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+    .spec-label { font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+    .spec-value { font-size: 18px; font-weight: 800; margin-top: 3px; line-height: 1.2; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+    .spec-sub { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-top: 1px; }
+    .spec.flag { background: var(--clay-soft); border-color: #eccdb9; }
+    .spec.flag .spec-value { color: #8a4424; }
+    .spec.none .spec-value { color: var(--muted); font-weight: 600; }
+    .order-diff { margin-top: 8px; font-size: 12.5px; font-weight: 600; color: #8a4424; }
+    .order .order-note { background: #fffbe9; border-color: #eadfb5; }
+    .chip.plain { background: transparent; border: 1px solid var(--line); color: var(--muted); }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+    .stat { background: var(--tint); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; }
+    .stat-n { font-family: var(--serif); font-size: 30px; font-weight: 650; line-height: 1; font-variant-numeric: tabular-nums; }
+    .stat-label { font-size: 12px; font-weight: 700; color: var(--muted); margin-top: 4px; }
+    .stat.clay .stat-n { color: var(--clay); }
+    .stat.urgent { background: var(--clay-soft); border-color: #eccdb9; }
+    .stat.urgent .stat-n { color: #8a4424; }
+    @media (max-width: 560px) {
+      .specs { grid-template-columns: 1fr 1fr; }
+      .specs .spec.wide { grid-column: 1 / -1; }
+      .stat { padding: 8px 10px; }
+      .stat-n { font-size: 24px; }
+    }
+
     /* ---------- status tracker ---------- */
     /* What a player actually came to look at: where their racket is. Three
        stops, the current one filled, so it reads at a glance on a phone. */
     .steps {
-      list-style: none; margin: 12px 0 2px; padding: 0;
+      list-style: none; margin: 14px 0 6px; padding: 0;
       display: grid; grid-template-columns: repeat(3, 1fr);
       position: relative;
     }
@@ -553,11 +586,7 @@
 
       <div class="card">
         <h2>Stringing queue</h2>
-        <div class="filters" id="staffFilters">
-          <button type="button" data-filter="active" class="active">All open</button>
-          <button type="button" data-filter="requested">Not started</button>
-          <button type="button" data-filter="in_progress">In progress</button>
-        </div>
+        <div class="stats" id="queueStats"></div>
         <div class="orders" id="staffOrders"></div>
       </div>
 
@@ -720,7 +749,6 @@
     let staffRoster = [];        // [{ phone, name }] — stringers, staff-only
     let confirmationResult = null;
     let recaptcha = null;
-    let staffFilter = "active";
     let view = "member";
 
     const $ = id => document.getElementById(id);
@@ -771,93 +799,104 @@
     }
 
     // ---------- rendering ----------
-    function orderCard(o, forStaff) {
-      const card = el("div", "order");
+    // A card is built to be scanned, not read. The three things a stringer
+    // needs at the machine (string, tension, grip) sit in their own boxes in
+    // large type; everything else is a single short line underneath.
+    function specBox(label, value, sub, cls) {
+      const box = el("div", "spec" + (cls ? " " + cls : ""));
+      box.appendChild(el("div", "spec-label", label));
+      box.appendChild(el("div", "spec-value", value));
+      if (sub) box.appendChild(el("div", "spec-sub", sub));
+      return box;
+    }
+    function tensionBig(mains, crosses) {
+      if (!mains) return "—";
+      return crosses && crosses !== mains ? mains + " / " + crosses : String(mains);
+    }
 
+    function orderCard(o, forStaff) {
+      const done = o.status === "finished";
+      const card = el("div", "order " + o.status);
+
+      // Coaches look for the person; players already know who they are and
+      // look for the racket.
       const top = el("div", "order-top");
-      top.appendChild(el("span", "order-racket", o.racket || "Racket"));
+      const title = el("div", "order-title");
+      if (forStaff) {
+        const name = el("div", "order-who", o.memberName || "Player");
+        if (o.memberNumber) name.appendChild(el("span", "order-no", "#" + o.memberNumber));
+        title.appendChild(name);
+        title.appendChild(el("div", "order-racket-sub", o.racket || "Racket"));
+      } else {
+        title.appendChild(el("div", "order-who", o.racket || "Racket"));
+      }
+      top.appendChild(title);
       top.appendChild(el("span", "badge " + o.status, STATUS_LABEL[o.status] || o.status));
       card.appendChild(top);
+      // "Where's my racket" is the question a player opens this to answer.
+      if (!forStaff && !done) card.appendChild(statusSteps(o.status));
 
-      if (forStaff) {
-        const who = el("div", "order-line");
-        const b = el("b", null, o.memberName || "Member");
-        who.appendChild(b);
-        const tail = [o.memberNumber ? "#" + o.memberNumber : "", prettyPhone(o.memberPhone)]
-          .filter(Boolean).join(" · ");
-        if (tail) who.appendChild(document.createTextNode(" · " + tail));
-        card.appendChild(who);
+      // What went in once it's done, since a stringer may have swapped an
+      // out-of-stock string or moved a tension; what was asked for until then.
+      const str = done ? (o.actualString || o.stringName) : o.stringName;
+      const mains = done ? (o.actualTension || o.tension) : o.tension;
+      const cross = done ? (o.actualTensionCross != null ? o.actualTensionCross : o.tensionCross) : o.tensionCross;
+      const specs = el("div", "specs");
+      specs.appendChild(specBox("String", str || "—", null, "wide"));
+      specs.appendChild(specBox("Tension", tensionBig(mains, cross),
+        cross && cross !== mains ? "lbs · mains / crosses" : "lbs"));
+      const grip = GRIP_LABEL[o.grip];
+      const gripShort = { overgrip: "Overgrip", replacement: "Replacement" }[o.grip];
+      specs.appendChild(specBox("Grip", gripShort || "No change",
+        gripShort ? "new grip on" : null, gripShort ? "flag" : "none"));
+      card.appendChild(specs);
+
+      if (done) {
+        const asked = [o.stringName, tensionText(o.tension, o.tensionCross)].filter(Boolean).join(" · ");
+        const got = [str, tensionText(mains, cross)].filter(Boolean).join(" · ");
+        if (asked && asked !== got) card.appendChild(el("div", "order-diff", "Asked for " + asked));
       }
 
-      // What they asked for, and — once it's done — what actually went in.
-      // They aren't always the same: a stringer may swap a string that's out
-      // of stock or adjust a tension, and the log has to say what's on the
-      // racket, not what was hoped for.
-      const asked = [o.stringName, tensionText(o.tension, o.tensionCross)].filter(Boolean).join(" · ");
-      if (o.status === "finished") {
-        const strung = [o.actualString || o.stringName,
-                        tensionText(o.actualTension || o.tension,
-                                    o.actualTensionCross != null ? o.actualTensionCross : o.tensionCross)]
-                       .filter(Boolean).join(" · ");
-        const line = el("div", "order-line");
-        line.appendChild(el("b", null, "Strung with "));
-        line.appendChild(document.createTextNode(strung || "—"));
-        card.appendChild(line);
-        if (strung !== asked && asked) {
-          card.appendChild(el("div", "order-line", "Asked for " + asked));
-        }
-      } else {
-        card.appendChild(el("div", "order-line", asked || "No string specified"));
+      if (o.notes) {
+        const note = el("div", "order-note");
+        note.appendChild(el("b", null, "Note  "));
+        note.appendChild(document.createTextNode(o.notes));
+        card.appendChild(note);
       }
 
-      if (o.inShop) {
-        if (o.status !== "finished") card.appendChild(el("div", "order-line", "Racket is at the club"));
-      } else if (o.dropOffDate) {
-        card.appendChild(el("div", "order-line",
-          "Dropping off " + fmtDate(o.dropOffDate) +
-          (o.dropOffSlot ? " · " + slotLabel(o.dropOffSlot) : "")));
-      }
-
-      const chips = el("div", "chips");
-      if (GRIP_LABEL[o.grip]) chips.appendChild(el("span", "chip clay", GRIP_LABEL[o.grip]));
-      if (o.neededBy && o.status !== "finished") {
-        // A racket someone needs for tomorrow's match is the one to pick up
-        // first, so the chip turns solid once it's that close.
+      // One line of logistics, as chips so it's still skimmable.
+      const meta = el("div", "chips");
+      if (o.neededBy && !done) {
         const soon = o.neededBy <= ymd(new Date(Date.now() + 24 * 3600000));
-        chips.appendChild(el("span", "chip" + (soon ? " urgent" : ""), "Needed by " + fmtDate(o.neededBy)));
+        meta.appendChild(el("span", "chip" + (soon ? " urgent" : " clay"), "Needed " + fmtDate(o.neededBy)));
       }
-      if (forStaff && o.enteredByName) chips.appendChild(el("span", "chip", "Entered by " + o.enteredByName));
-      if (forStaff && o.status === "finished" && o.notifyError) {
-        chips.appendChild(el("span", "chip urgent", "Text didn't send: " + o.notifyError));
-      } else if (forStaff && o.status === "finished" && o.notifiedAt) {
-        chips.appendChild(el("span", "chip", "Player texted"));
+      if (!done) {
+        if (o.inShop) meta.appendChild(el("span", "chip plain", "At the club"));
+        else if (o.dropOffDate) meta.appendChild(el("span", "chip plain",
+          "Drop-off " + fmtDate(o.dropOffDate) + (o.dropOffSlot ? ", " + slotLabel(o.dropOffSlot) : "")));
       }
-      if (chips.children.length) card.appendChild(chips);
-
-      if (o.status === "finished" && o.finishedAt) {
-        card.appendChild(el("div", "order-line",
-          "Strung by " + (o.strungByName || "staff") + " · " + fmtWhen(o.finishedAt)));
-        if (o.chargedByName) {
-          card.appendChild(el("div", "order-line", "Charged by " + o.chargedByName));
-        }
-      } else if (o.status === "in_progress" && o.startedByName) {
-        card.appendChild(el("div", "order-line", "Started by " + o.startedByName));
-      } else {
-        card.appendChild(el("div", "order-line", "Requested " + fmtWhen(o.createdAt)));
+      if (forStaff) {
+        if (o.status === "in_progress" && o.startedByName) meta.appendChild(el("span", "chip plain", "Started by " + o.startedByName));
+        if (done && o.strungByName) meta.appendChild(el("span", "chip plain",
+          "Strung by " + o.strungByName + (o.finishedAt ? ", " + fmtDate(ymd(new Date(o.finishedAt))) : "")));
+        if (done && o.chargedByName) meta.appendChild(el("span", "chip plain", "Charged by " + o.chargedByName));
+        if (done && o.notifyError) meta.appendChild(el("span", "chip urgent", "Text didn't send: " + o.notifyError));
+        else if (done && o.notifiedAt) meta.appendChild(el("span", "chip", "Player texted"));
+        if (o.memberPhone) meta.appendChild(el("span", "chip plain", prettyPhone(o.memberPhone)));
+      } else if (done && o.finishedAt) {
+        meta.appendChild(el("span", "chip plain", "Finished " + fmtDate(ymd(new Date(o.finishedAt)))));
+      } else if (o.status === "requested" && o.createdAt) {
+        meta.appendChild(el("span", "chip plain", "Requested " + fmtDate(ymd(new Date(o.createdAt)))));
       }
+      if (meta.children.length) card.appendChild(meta);
 
-      if (o.notes) card.appendChild(el("div", "order-note", o.notes));
-
-      // Players get the whole journey rather than just a word, so "in
-      // progress" reads as two-thirds of the way there.
-      if (!forStaff) card.appendChild(statusSteps(o.status));
 
       // The stringer fills these in as they work, so the details are already
       // right when they press finish rather than being reconstructed after.
       let panel = null;
       if (forStaff && o.status === "in_progress") {
         panel = el("div", "finish-panel");
-        panel.appendChild(el("div", "finish-title", "What went on it"));
+        panel.appendChild(el("div", "finish-title", "What went on it (change if different)"));
         const row = el("div", "finish-row");
         const sIn = el("input");
         sIn.type = "text"; sIn.placeholder = "String"; sIn.value = o.actualString || o.stringName || "";
@@ -964,24 +1003,36 @@
       return (a.createdAt || 0) - (b.createdAt || 0);
     }
 
+    // Two piles, in the order they get worked: what's on the machine, then
+    // what's waiting (oldest first). A count per pile answers "how much have
+    // I got today" before anyone reads a card.
     function renderStaff() {
       const wrap = $("staffOrders");
       wrap.innerHTML = "";
-      const live = orders.filter(o => o.status !== "finished").filter(o =>
-        staffFilter === "active" ? true : o.status === staffFilter
-      ).sort(sortForList);
+      const live = orders.filter(o => o.status !== "finished").sort(sortForList);
+      const bench = live.filter(o => o.status === "in_progress");
+      const waiting = live.filter(o => o.status === "requested");
+      const soonDay = ymd(new Date(Date.now() + 24 * 3600000));
+      const due = live.filter(o => o.neededBy && o.neededBy <= soonDay);
 
-      $("staffFilters").querySelectorAll("button").forEach(b =>
-        b.classList.toggle("active", b.dataset.filter === staffFilter));
+      const stats = $("queueStats");
+      stats.innerHTML = "";
+      [["Not started", waiting.length, ""], ["In progress", bench.length, "clay"],
+       ["Due by tomorrow", due.length, due.length ? "urgent" : ""]].forEach(([label, n, cls]) => {
+        const box = el("div", "stat" + (cls ? " " + cls : ""));
+        box.appendChild(el("div", "stat-n", String(n)));
+        box.appendChild(el("div", "stat-label", label));
+        stats.appendChild(box);
+      });
 
       if (!live.length) {
         wrap.appendChild(el("div", "empty", "Nothing in the queue."));
       } else {
-        const head = el("div", "order-line count",
-          live.length + (live.length === 1 ? " racket" : " rackets"));
-        head.style.marginBottom = "10px";
-        wrap.appendChild(head);
-        for (const o of live) wrap.appendChild(orderCard(o, true));
+        for (const [label, list] of [["In progress", bench], ["Not started", waiting]]) {
+          if (!list.length) continue;
+          wrap.appendChild(el("div", "section-title", label + " · " + list.length));
+          for (const o of list) wrap.appendChild(orderCard(o, true));
+        }
       }
 
       renderStaffPast();
@@ -1742,12 +1793,6 @@
     $("wPhone").addEventListener("change", fillWalkInFromPhone);
     $("wName").addEventListener("change", fillWalkInFromName);
     $("pastSearch").addEventListener("input", renderStaffPast);
-    $("staffFilters").addEventListener("click", e => {
-      const b = e.target.closest("button");
-      if (!b) return;
-      staffFilter = b.dataset.filter;
-      renderStaff();
-    });
     $("viewSwitch").addEventListener("click", e => {
       const b = e.target.closest("button");
       if (!b) return;
