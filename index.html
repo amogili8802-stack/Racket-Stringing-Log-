@@ -230,7 +230,7 @@
     .order-who { font-family: var(--serif); font-size: 20px; font-weight: 650; line-height: 1.15; }
     .order-no { margin-left: 8px; font-family: Manrope, sans-serif; font-size: 13px; font-weight: 700; color: var(--muted); }
     .order-racket-sub { font-size: 14px; font-weight: 600; color: var(--muted); margin-top: 2px; }
-    .specs { display: grid; grid-template-columns: 2fr 1.1fr 1.1fr; gap: 8px; margin-top: 12px; }
+    .specs { display: grid; grid-template-columns: 2fr 1fr 1fr 1.2fr; gap: 8px; margin-top: 12px; }
     .spec { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; min-width: 0; }
     .spec-label { font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
     .spec-value { font-size: 18px; font-weight: 800; margin-top: 3px; line-height: 1.2; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
@@ -247,7 +247,7 @@
     .stat-label { font-size: 12px; font-weight: 700; color: var(--muted); margin-top: 4px; }
     .stat.clay .stat-n { color: var(--clay); }
     @media (max-width: 560px) {
-      .specs { grid-template-columns: 1fr 1fr; }
+      .specs { grid-template-columns: 1fr 1fr 1fr; }
       .specs .spec.wide { grid-column: 1 / -1; }
       .stat { padding: 8px 10px; }
       .stat-n { font-size: 24px; }
@@ -811,10 +811,6 @@
       if (sub) box.appendChild(el("div", "spec-sub", sub));
       return box;
     }
-    function tensionBig(mains, crosses) {
-      if (!mains) return "—";
-      return crosses && crosses !== mains ? mains + " / " + crosses : String(mains);
-    }
 
     function orderCard(o, forStaff) {
       const done = o.status === "finished";
@@ -845,8 +841,11 @@
       const cross = done ? (o.actualTensionCross != null ? o.actualTensionCross : o.tensionCross) : o.tensionCross;
       const specs = el("div", "specs");
       specs.appendChild(specBox("String", str || "—", null, "wide"));
-      specs.appendChild(specBox("Tension", tensionBig(mains, cross),
-        cross && cross !== mains ? "lbs · mains / crosses" : "lbs"));
+      // Two boxes, even when they match, so nobody has to work out which
+      // number is which at the machine.
+      specs.appendChild(specBox("Mains", mains ? String(mains) : "—", mains ? "lbs" : null));
+      const crossShown = cross || mains;
+      specs.appendChild(specBox("Crosses", crossShown ? String(crossShown) : "—", crossShown ? "lbs" : null));
       const grip = GRIP_LABEL[o.grip];
       const gripShort = { overgrip: "Overgrip", replacement: "Replacement" }[o.grip];
       specs.appendChild(specBox("Grip", gripShort || "No change",
@@ -904,7 +903,7 @@
         const cIn = el("input");
         cIn.type = "number"; cIn.placeholder = "Crosses";
         cIn.value = o.actualTensionCross != null ? o.actualTensionCross
-                  : (o.tensionCross != null ? o.tensionCross : "");
+                  : (o.tensionCross != null ? o.tensionCross : (o.tension || ""));
         row.appendChild(sIn); row.appendChild(tIn); row.appendChild(cIn);
         panel.appendChild(row);
 
