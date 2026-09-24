@@ -3,104 +3,180 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LAGCC Racket Stringing</title>
+  <title>Racket Stringing · LAGCC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <style>
+    /* Cream and green, like the clinic sign-up site, but deliberately not the
+       same: a dark green masthead instead of a white one, a navy accent
+       instead of gold, and clean sans-serif type. A coach flipping between the
+       two tabs should never have to read the page to know which one it is. */
     :root {
-      --bg: #f3eee4;
-      --surface: #fffdf9;
-      --text: #4b3528;
-      --muted: #756659;
-      --border: #cdbfae;
-      --line: #d9c99c;
-      --waiting: #8a7a5c;
-      --bench: #9a6b3f;
-      --ready: #4f7350;
-      --danger: #b3261e;
-      --tint: #f9f5ed;
+      --bg: #f4f1e9;
+      --surface: #ffffff;
+      --tint: #f6f3ec;
+      --text: #1f2a24;
+      --muted: #6b6a5f;
+      --border: #e8e2d4;
+      --line: #d6ccb4;
+      --green: #1f4a3a;
+      --green-deep: #173a2d;
+      --green-soft: #e3ebe3;
+      --clay: #2f4a6b;
+      --clay-soft: #e2e8f0;
+      --waiting: #8c8677;
+      --bench: #2f4a6b;
+      --ready: #2f6b4f;
+      --danger: #a8321f;
+      /* Headings share the body's sans; the name is kept so older rules still resolve. */
+      --serif: Manrope, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --shadow: 0 1px 2px rgba(31,42,36,.04), 0 6px 20px rgba(31,42,36,.06);
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: Manrope, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: var(--bg);
       color: var(--text);
       -webkit-text-size-adjust: 100%;
+      -webkit-font-smoothing: antialiased;
     }
-    .page { max-width: 880px; margin: 0 auto; padding: 30px 20px 60px; }
+    button { transition: background-color .15s, border-color .15s, color .15s, box-shadow .15s; }
+    .page { max-width: 860px; margin: 0 auto; padding: 26px 20px 60px; }
 
-    h1 { margin: 0 0 4px; font-size: 30px; font-weight: 800; text-align: center; }
-    .sub { margin: 0 0 20px; text-align: center; color: var(--muted); font-size: 14px; font-weight: 600; }
+    /* ---------- masthead ---------- */
+    .masthead {
+      background: var(--green);
+      color: #f4efe2;
+    }
+    .masthead-inner {
+      max-width: 860px; margin: 0 auto;
+      padding: 18px 20px;
+      display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    /* The club's name, in the script it's written in on the club's own site. */
+    .club-name {
+      margin: 0 0 7px;
+      font-family: "Great Vibes", "Snell Roundhand", "Apple Chancery", cursive;
+      font-size: 34px; font-weight: 400; line-height: 1.1; word-spacing: .08em;
+    }
+    .brand-name {
+      margin: 0;
+      font-weight: 700; text-transform: uppercase;
+      font-size: 11.5px; letter-spacing: .18em; line-height: 1.1; color: #c8dacd;
+    }
+
+    h1 { margin: 0 0 4px; font-size: 28px; font-weight: 800; letter-spacing: -.025em; text-align: center; }
+    .sub {
+      margin: 0 0 22px; text-align: center; color: var(--muted);
+      font-size: 15px; font-weight: 500;
+    }
 
     /* ---------- session pill ---------- */
     .session {
       display: none;
       align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 16px;
+      gap: 12px;
       font-size: 13px;
-      font-weight: 650;
-      color: var(--muted);
+      font-weight: 600;
+      color: #cfdccf;
     }
     .session.show { display: flex; }
-    .session .who { color: var(--text); }
+    .session .who {
+      color: #f4efe2; text-decoration: none;
+      border: 1px solid rgba(244,239,226,.35); border-radius: 999px;
+      padding: 5px 12px;
+    }
+    .role-tag {
+      font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+      background: rgba(255,255,255,.14); color: #fff; border-radius: 999px; padding: 4px 9px;
+    }
     .linkish {
       border: 0; background: none; padding: 0;
-      font: inherit; color: var(--muted);
+      font: inherit; color: inherit;
       text-decoration: underline; cursor: pointer;
     }
 
     /* ---------- view switch ---------- */
-    .switch { display: none; gap: 6px; justify-content: center; margin-bottom: 22px; }
+    .switch {
+      display: none; gap: 4px; justify-content: center;
+      width: fit-content; margin: 0 auto 24px;
+      padding: 4px; border-radius: 999px;
+      background: #e9e4d8; border: 0;
+    }
     .switch.show { display: flex; }
     .switch button {
-      height: 38px; padding: 0 16px;
-      border: 1px solid var(--border); border-radius: 9px;
-      background: var(--surface); color: var(--text);
-      font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+      height: 36px; padding: 0 18px;
+      border: 0; border-radius: 999px;
+      background: transparent; color: var(--text);
+      font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer;
     }
-    .switch button.active { background: #e8d8c4; }
+    .switch button.active { background: var(--surface); color: var(--green); box-shadow: 0 1px 3px rgba(31,42,36,.12); }
 
     /* ---------- cards ---------- */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 18px;
-      margin-bottom: 16px;
-      box-shadow: 0 6px 18px rgba(75,53,40,.06);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow);
     }
-    .card h2 { margin: 0 0 14px; font-size: 17px; font-weight: 750; }
+    .card h2 {
+      margin: 0 0 16px;
+      font-size: 20px; font-weight: 800; letter-spacing: -.02em;
+    }
+    .card-lede { margin: -10px 0 16px; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
 
-    label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 650; }
+    .section-title {
+      display: flex; align-items: center; gap: 12px;
+      margin: 6px 0 12px;
+      font-size: 11.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+    }
+    .section-title::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+    label { display: block; margin-bottom: 6px; font-size: 12.5px; font-weight: 700; letter-spacing: .01em; }
+    .opt { font-weight: 500; color: var(--muted); }
     input, select, textarea {
       width: 100%;
-      padding: 10px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
       font-family: inherit;
-      font-size: 15px;   /* 16px-ish keeps iOS from zooming the page on focus */
+      font-size: 16px;   /* 16px keeps iOS from zooming the page on focus */
       background: #fff;
       color: var(--text);
     }
+    input:focus, select:focus, textarea:focus {
+      outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(31,74,58,.14);
+    }
     textarea { min-height: 64px; resize: vertical; }
-    .field { margin-bottom: 13px; }
-    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+    .field { margin-bottom: 14px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .grid3 { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 14px; }
 
     button.primary {
-      width: 100%; height: 46px;
-      border: 0; border-radius: 9px;
-      background: var(--text); color: #fff;
+      width: 100%; height: 48px;
+      border: 0; border-radius: 999px;
+      background: var(--green); color: #fff;
       font: inherit; font-size: 15px; font-weight: 750; cursor: pointer;
+      box-shadow: 0 2px 8px rgba(31,74,58,.18);
     }
+    button.primary:hover { background: var(--green-deep); }
     button.primary:disabled { opacity: .5; cursor: default; }
     button.secondary {
-      height: 40px; padding: 0 14px;
-      border: 1px solid var(--border); border-radius: 8px;
+      height: 38px; padding: 0 16px;
+      border: 1px solid var(--line); border-radius: 999px;
       background: var(--surface); color: var(--text);
       font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
     }
-    button.go { background: var(--ready); border-color: var(--ready); color: #fff; }
+    button.secondary:hover { border-color: #bfb49b; }
+    button.go { background: var(--green); border-color: var(--green); color: #fff; }
+    button.clay { background: var(--clay); border-color: var(--clay); color: #fff; box-shadow: 0 2px 8px rgba(47,74,107,.22); }
+    button.go:hover { background: var(--green-deep); }
+    button.clay:hover { background: #243a55; }
     button.warn { color: var(--danger); }
 
     .msg { margin-top: 10px; font-size: 13px; font-weight: 650; }
@@ -110,113 +186,184 @@
     /* ---------- order rows ---------- */
     .orders { margin-top: 4px; }
     .order {
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
-      margin-bottom: 11px;
-      background: var(--tint);
+      border: 1.5px solid var(--green);
+      border-radius: 18px;
+      padding: 18px 20px;
+      margin-bottom: 14px;
+      background: var(--surface);
+      box-shadow: 0 1px 2px rgba(31,42,36,.04), 0 4px 14px rgba(31,42,36,.05);
     }
-    .order-top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 7px; }
-    .order-racket { font-size: 15px; font-weight: 750; }
+    .order-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+    .order-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+    .order-phone { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; }
+    .order-racket { font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
+    /* Soft tint with a colored dot: the status reads by color without a
+       solid block of it on every card. */
     .badge {
-      font-size: 11px; font-weight: 750; letter-spacing: .03em;
-      text-transform: uppercase;
-      padding: 3px 8px; border-radius: 20px;
-      color: #fff; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 700;
+      padding: 4px 10px 4px 9px; border-radius: 999px;
+      white-space: nowrap;
     }
-    .badge.requested { background: var(--waiting); }
-    .badge.in_progress { background: var(--bench); }
-    .badge.finished { background: var(--ready); }
-    .order-line { font-size: 13.5px; color: var(--muted); margin-top: 3px; }
+    .badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .badge.requested { background: #ece8de; color: #5f5b50; }
+    .badge.in_progress { background: #e3e9f2; color: var(--bench); }
+    .badge.finished { background: #e1ede5; color: #2a5e45; }
+    .order-line { font-size: 13.5px; color: var(--muted); margin-top: 3px; line-height: 1.45; }
     .order-line b { color: var(--text); font-weight: 700; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .chip {
+      font-size: 12px; font-weight: 700;
+      padding: 3px 10px; border-radius: 999px;
+      background: var(--green-soft); color: var(--green);
+    }
+    .chip.clay { background: var(--clay-soft); color: #2a4262; }
+    .chip.urgent { background: var(--danger); color: #fff; }
     .order-note {
-      margin-top: 8px; padding: 8px 10px;
-      background: #fff; border: 1px solid var(--border); border-radius: 7px;
+      margin-top: 10px; padding: 9px 12px;
+      background: #fff; border: 1px solid var(--border); border-radius: 10px;
       font-size: 13px;
     }
-    .order-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .order-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
     .finish-panel {
-      margin-top: 11px; padding: 11px;
-      background: #fff; border: 1px solid var(--border); border-radius: 8px;
+      margin-top: 12px; padding: 12px;
+      background: var(--tint); border: 0; border-radius: 12px;
     }
-    .finish-title { font-size: 12px; font-weight: 750; margin-bottom: 8px; color: var(--muted); }
+    .finish-title { font-size: 12px; font-weight: 750; color: var(--muted); }
+    details.finish-panel > summary {
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; list-style: none;
+    }
+    details.finish-panel > summary::-webkit-details-marker { display: none; }
+    details.finish-panel > summary::after { content: "▾"; font-size: 14px; color: var(--text); }
+    details.finish-panel[open] > summary::after { content: "▴"; }
+    details.finish-panel[open] > summary { margin-bottom: 8px; }
+    .strung-row { margin-top: 12px; max-width: 320px; }
+    .strung-row select { width: auto; flex: 0 0 auto; min-width: 118px; padding: 6px 8px; }
     .finish-row { display: flex; gap: 7px; align-items: center; margin-bottom: 7px; }
     .finish-row:last-child { margin-bottom: 0; }
-    .finish-row input, .finish-row select { padding: 8px; font-size: 14px; }
+    .finish-row input, .finish-row select { padding: 8px 10px; font-size: 14px; }
     .finish-row input:first-child { flex: 2 1 40%; }
     .finish-row input + input { flex: 1 1 22%; min-width: 74px; }
     .finish-label { font-size: 12.5px; font-weight: 650; color: var(--muted); white-space: nowrap; }
 
-    .empty { padding: 18px 2px; color: var(--muted); font-size: 14px; font-weight: 600; text-align: center; }
+    /* ---------- scannable card ---------- */
+    .order-title { min-width: 0; }
+    .order-who { font-size: 19px; font-weight: 800; letter-spacing: -.02em; line-height: 1.2; }
+    .order-no { margin-left: 8px; font-family: Manrope, sans-serif; font-size: 13px; font-weight: 700; color: var(--muted); }
+    .order-racket-sub { font-size: 14px; font-weight: 600; color: var(--muted); margin-top: 2px; }
+    .specs { display: grid; grid-template-columns: 2fr 1fr 1fr 1.2fr; gap: 8px; margin-top: 12px; }
+    .spec { background: var(--tint); border: 0; border-radius: 12px; padding: 10px 12px; min-width: 0; }
+    .spec-label { font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+    .spec-value { font-size: 18px; font-weight: 800; letter-spacing: -.01em; margin-top: 3px; line-height: 1.2; font-variant-numeric: tabular-nums; overflow-wrap: break-word; }
+    .spec-sub { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-top: 1px; }
+    .order-diff { margin-top: 8px; font-size: 12.5px; font-weight: 600; color: #2a4262; }
+    .order .order-note { background: #fffbe9; border-color: #eadfb5; }
+    /* Coaches must not miss a note (a cracked grommet, a grip color), so it
+       gets a hard black outline on their side. */
+    .order .order-note.staff { border: 1px solid #9a968c; }
+    .chip.plain { background: transparent; border: 1px solid var(--line); color: var(--muted); }
+    /* The counts sit beside the heading, as pills in the status badges'
+       colors, so they read as a summary rather than as another card. */
+    .queue-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+    .queue-head h2 { margin: 0; }
+    .stats { display: flex; gap: 8px; flex-wrap: wrap; }
+    .stat {
+      display: inline-flex; align-items: baseline; gap: 5px;
+      padding: 5px 12px; border-radius: 999px;
+      background: #ece8de; color: #5f5b50;
+      font-size: 13px; font-weight: 700; white-space: nowrap;
+    }
+    .stat.clay { background: #e3e9f2; color: var(--bench); }
+    .stat-n { font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    @media (max-width: 560px) {
+      .specs { grid-template-columns: .9fr .9fr 1.6fr; }
+      .spec { padding: 8px 10px; }
+      .order-top { flex-wrap: nowrap; align-items: flex-start; }
+      .order-top > .badge, .order-right { margin-top: 4px; }
+      .specs .spec.wide { grid-column: 1 / -1; }
+      .spec-value { font-size: 15.5px; }
+      details.adder summary { flex-wrap: wrap; row-gap: 2px; }
+      details.adder summary .hint { flex-basis: 100%; padding-left: 36px; }
+    }
+
+    /* ---------- status tracker ---------- */
+    /* What a player actually came to look at: where their racket is. Three
+       stops, the current one filled, so it reads at a glance on a phone. */
+    .steps {
+      list-style: none; margin: 14px 0 6px; padding: 0;
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      position: relative;
+    }
+    .steps li {
+      position: relative; text-align: center;
+      font-size: 12px; font-weight: 700; color: var(--muted);
+      padding-top: 22px;
+    }
+    .steps li::before {
+      content: ""; position: absolute; top: 0; left: 50%;
+      width: 14px; height: 14px; margin-left: -7px;
+      border-radius: 50%; background: #fff; border: 2px solid var(--line);
+      z-index: 1;
+    }
+    .steps li + li::after {
+      content: ""; position: absolute; top: 7px; right: 50%;
+      width: 100%; height: 2px; background: var(--line); margin-top: -1px;
+    }
+    .steps li.done::before { background: var(--green); border-color: var(--green); }
+    .steps li.done + li.done::after, .steps li.done + li.now::after { background: var(--green); }
+    .steps li.now { color: var(--text); }
+    .steps li.now::before { border-color: var(--clay); background: var(--clay); box-shadow: 0 0 0 4px var(--clay-soft); }
+    .steps li.now.last::before { border-color: var(--green); background: var(--green); box-shadow: 0 0 0 4px var(--green-soft); }
+
+    .empty { padding: 20px 2px; color: var(--muted); font-size: 14px; font-weight: 500; text-align: center; }
     .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
     .filters button {
-      height: 34px; padding: 0 12px;
-      border: 1px solid var(--border); border-radius: 8px;
+      height: 32px; padding: 0 14px;
+      border: 1px solid var(--line); border-radius: 999px;
       background: var(--surface); color: var(--text);
       font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer;
     }
-    .filters button.active { background: #e8d8c4; }
+    .filters button.active { background: var(--green); border-color: var(--green); color: #fff; }
     .count { color: var(--muted); font-weight: 650; }
 
     details.adder summary {
-      cursor: pointer; font-size: 14px; font-weight: 700;
-      padding: 4px 0; list-style: none;
+      cursor: pointer; list-style: none;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 17px; font-weight: 800; letter-spacing: -.015em;
     }
     details.adder summary::-webkit-details-marker { display: none; }
-    details.adder summary::before { content: "+ "; }
-    details.adder[open] summary::before { content: "− "; }
-    details.adder .body { padding-top: 12px; }
-
-    /* ---------- pierce ---------- */
-    .pierce {
-      position: fixed; inset: 0; z-index: 999;
-      display: none;
-      flex-wrap: wrap;
-      align-content: center; justify-content: center;
-      gap: 0 18px;
-      overflow: hidden;
-      background: rgba(63, 49, 40, .93);
-      color: #f6efe4;
-      font-size: clamp(28px, 7vw, 64px);
-      font-weight: 800;
-      letter-spacing: -.02em;
-      line-height: 1.05;
-      text-transform: lowercase;
-      /* Clicks must still land on whatever was underneath — this is decoration
-         over the top of a working button, not a thing to be dismissed. */
-      pointer-events: none;
-      user-select: none;
+    details.adder summary::before {
+      content: "+"; flex: none;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--clay); color: #fff;
+      font-family: Manrope, sans-serif; font-size: 17px; font-weight: 700;
     }
-    .pierce.go { display: flex; animation: pierceFlash .8s ease-out forwards; }
-    @keyframes pierceFlash {
-      0%   { opacity: 0; transform: scale(1.04); }
-      10%  { opacity: 1; transform: scale(1); }
-      65%  { opacity: 1; }
-      100% { opacity: 0; }
-    }
-    /* Still says it, without the full-screen strobe. */
-    @media (prefers-reduced-motion: reduce) {
-      .pierce.go { animation: pierceFade .8s ease-out forwards; }
-      @keyframes pierceFade { 0%, 100% { opacity: 0; } 20%, 65% { opacity: .96; } }
-    }
+    details.adder[open] summary::before { content: "−"; }
+    details.adder summary .hint { font-family: Manrope, sans-serif; font-size: 13px; font-weight: 500; color: var(--muted); }
+    details.adder .body { padding-top: 16px; }
+    details.adder.quiet summary { font-size: 16px; }
+    details.adder.quiet summary::before { background: var(--green-soft); color: var(--green); }
 
     /* ---------- demo ---------- */
     .demo-bar {
       display: none;
       align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
-      padding: 9px 14px; margin-bottom: 18px;
-      background: #3f3128; color: #f6efe4;
-      border-radius: 10px;
+      padding: 9px 14px; margin-bottom: 20px;
+      background: var(--clay-soft); color: #243a55;
+      border: 1px dashed var(--clay);
+      border-radius: 12px;
       font-size: 12.5px; font-weight: 650;
     }
     .demo-bar.show { display: flex; }
     .demo-bar button {
-      height: 30px; padding: 0 11px;
-      border: 1px solid rgba(255,255,255,.35); border-radius: 7px;
+      height: 30px; padding: 0 12px;
+      border: 1px solid var(--clay); border-radius: 999px;
       background: transparent; color: inherit;
       font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
     }
-    .demo-bar button.active { background: #f6efe4; color: #3f3128; border-color: #f6efe4; }
+    .demo-bar button.active { background: var(--clay); color: #fff; }
 
     /* ---------- login ---------- */
     .login {
@@ -228,23 +375,34 @@
     }
     .login.show { display: flex; }
     .login-card {
-      width: 100%; max-width: 380px;
+      width: 100%; max-width: 390px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 32px 30px 24px;
-      box-shadow: 0 10px 30px rgba(75,53,40,.10);
+      border-radius: 22px;
+      padding: 30px 30px 24px;
+      box-shadow: 0 12px 34px rgba(31,42,36,.10);
     }
-    .login-card h1 { font-size: 24px; margin-bottom: 6px; }
+    .login-card .brand { justify-content: center; text-align: center; margin-bottom: 14px; color: var(--text); }
+    .login-card .club-name { font-size: 30px; }
+    .login-card .brand-name { color: var(--green); }
+    .login-card h1 { font-size: 26px; margin-bottom: 4px; }
     .login-note { margin-top: 16px; font-size: 12px; color: var(--muted); text-align: center; line-height: 1.5; }
     .login-build { margin-top: 10px; text-align: center; font-size: 11px; color: var(--muted); opacity: .7; }
+    .login-links { display: flex; justify-content: space-between; gap: 10px; margin-top: 6px; }
+    .login-links .login-back { width: auto; }
+    .login-hint { margin: 10px 0 0; font-size: 12.5px; color: var(--muted); text-align: center; }
     .login-back { width: 100%; margin-top: 10px; background: none; border: 0; color: var(--muted); font: inherit; font-size: 13px; text-decoration: underline; cursor: pointer; }
 
     @media (max-width: 560px) {
-      .page { padding: 22px 14px 48px; }
-      h1 { font-size: 25px; }
-      .grid2 { grid-template-columns: 1fr; }
+      .page { padding: 20px 14px 48px; }
+      .masthead-inner { padding: 14px; }
+      .club-name { font-size: 27px; }
+      .login-card .club-name { font-size: 25px; }
+      .brand-name { font-size: 15px; }
+      .card { padding: 18px 16px; }
+      .grid2, .grid3 { grid-template-columns: 1fr; }
       .order-actions button { flex: 1 1 auto; min-height: 44px; }
+      .switch { width: 100%; }
       .switch button { flex: 1; }
     }
   </style>
@@ -254,23 +412,31 @@
 </head>
 <body>
 
-  <div class="pierce" id="pierceOverlay" aria-hidden="true"></div>
+  <header class="masthead">
+    <div class="masthead-inner">
+      <div class="brand">
+        <div>
+          <p class="club-name">Los Altos Golf &amp; Country Club</p>
+          <p class="brand-name">Racket Stringing</p>
+        </div>
+      </div>
+      <div class="session" id="session">
+        <span class="role-tag" id="roleTag" hidden>Coach</span>
+        <button type="button" class="linkish who" id="sessionName" title="Change your name"></button>
+        <button type="button" class="linkish" id="logoutBtn">Log out</button>
+      </div>
+    </div>
+  </header>
 
   <div class="page">
     <div class="demo-bar" id="demoBar">
-      <span>Demo — sample data, nothing saved</span>
-      <button type="button" data-as="member" id="demoMember">View as member</button>
-      <button type="button" data-as="staff" id="demoStaff">View as stringer</button>
+      <span>Demo: sample data, nothing saved, no texts sent</span>
+      <button type="button" data-as="member" id="demoMember">View as player</button>
+      <button type="button" data-as="staff" id="demoStaff">View as coach</button>
       <button type="button" id="demoReset">Reset data</button>
     </div>
 
-    <h1>Racket Stringing</h1>
-    <p class="sub" id="tagline">LAGCC</p>
-
-    <div class="session" id="session">
-      <span>Signed in as <button type="button" class="linkish who" id="sessionName" title="Change your name"></button></span>
-      <button type="button" class="linkish" id="logoutBtn">Log out</button>
-    </div>
+    <p class="sub" id="pageSub">Request a stringing and check its status.</p>
 
     <div class="switch" id="viewSwitch">
       <button type="button" data-view="staff" id="tabStaff">Stringing queue</button>
@@ -280,32 +446,37 @@
     <!-- ============ MEMBER ============ -->
     <section id="memberView" hidden>
       <div class="card">
+        <h2>My rackets</h2>
+        <div class="orders" id="myOrders"></div>
+      </div>
+
+      <div class="card">
         <h2>Request a stringing</h2>
         <form id="orderForm" novalidate>
           <div class="field">
             <label for="racket">Racket</label>
-            <input type="text" id="racket" maxlength="60" placeholder="e.g. Wilson Blade 98" />
+            <input type="text" id="racket" maxlength="60" list="commonRackets" />
           </div>
           <div class="field">
             <label for="stringName">String</label>
-            <input type="text" id="stringName" maxlength="60" list="commonStrings" placeholder="e.g. Luxilon ALU Power 16L" />
-            <datalist id="commonStrings">
-              <option value="Luxilon ALU Power 16L"></option>
-              <option value="Babolat RPM Blast 17"></option>
-              <option value="Solinco Hyper-G 16L"></option>
-              <option value="Wilson NXT 16"></option>
-              <option value="Head Lynx Tour 17"></option>
-              <option value="Natural gut 16"></option>
-            </datalist>
+            <input type="text" id="stringName" maxlength="60" list="commonStrings" />
           </div>
-          <div class="grid2">
+          <div class="grid3">
             <div class="field">
-              <label for="tension">Tension — mains (lbs)</label>
-              <input type="number" id="tension" inputmode="numeric" min="30" max="75" placeholder="55" />
+              <label for="grip">Grip change</label>
+              <select id="grip">
+                <option value="none">No grip change</option>
+                <option value="overgrip">New overgrip</option>
+                <option value="replacement">New replacement grip</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tension">Mains (lbs)</label>
+              <input type="number" id="tension" inputmode="numeric" min="30" max="75" />
             </div>
             <div class="field">
               <label for="tensionCross">Crosses (lbs)</label>
-              <input type="number" id="tensionCross" inputmode="numeric" min="30" max="75" placeholder="same as mains" />
+              <input type="number" id="tensionCross" inputmode="numeric" min="30" max="75" />
             </div>
           </div>
           <div class="grid2">
@@ -322,17 +493,12 @@
             </div>
           </div>
           <div class="field">
-            <label for="notes">Anything else (optional)</label>
-            <textarea id="notes" maxlength="300" placeholder="e.g. grommet looks cracked near 3 o'clock"></textarea>
+            <label for="notes">Anything else <span class="opt">(optional)</span></label>
+            <textarea id="notes" maxlength="300"></textarea>
           </div>
           <button type="submit" class="primary" id="orderSubmit">Send request</button>
           <div class="msg" id="orderMsg"></div>
         </form>
-      </div>
-
-      <div class="card">
-        <h2>My rackets</h2>
-        <div class="orders" id="myOrders"></div>
       </div>
 
       <div class="card">
@@ -344,93 +510,216 @@
     <!-- ============ STAFF ============ -->
     <section id="staffView" hidden>
       <div class="card">
-        <h2>Stringing queue</h2>
-        <div class="filters" id="staffFilters">
-          <button type="button" data-filter="active" class="active">On now</button>
-          <button type="button" data-filter="requested">Waiting</button>
-          <button type="button" data-filter="in_progress">In progress</button>
+        <details class="adder" id="walkInAdder">
+          <summary>Enter a racket <span class="hint">for a player who handed it to you</span></summary>
+          <div class="body">
+            <form id="walkInForm" novalidate>
+              <div class="section-title">Player</div>
+              <div class="grid3">
+                <div class="field">
+                  <label for="wPhone">Mobile number</label>
+                  <input type="tel" id="wPhone" maxlength="20" />
+                </div>
+                <div class="field">
+                  <label for="wName">Full name</label>
+                  <input type="text" id="wName" maxlength="60" list="memberNames" />
+                </div>
+                <div class="field">
+                  <label for="wMemberNo">Member # <span class="opt">(optional)</span></label>
+                  <input type="text" id="wMemberNo" maxlength="20" />
+                </div>
+              </div>
+              <div class="section-title">Racket</div>
+              <div class="grid2">
+                <div class="field">
+                  <label for="wRacket">Racket</label>
+                  <input type="text" id="wRacket" maxlength="60" list="commonRackets" />
+                </div>
+                <div class="field">
+                  <label for="wString">String</label>
+                  <input type="text" id="wString" maxlength="60" list="commonStrings" />
+                </div>
+              </div>
+              <div class="grid3">
+                <div class="field">
+                  <label for="wGrip">Grip change</label>
+                  <select id="wGrip">
+                    <option value="none">No grip change</option>
+                    <option value="overgrip">New overgrip</option>
+                    <option value="replacement">New replacement grip</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="wTension">Mains (lbs)</label>
+                  <input type="number" id="wTension" inputmode="numeric" min="30" max="75" />
+                </div>
+                <div class="field">
+                  <label for="wTensionCross">Crosses (lbs)</label>
+                  <input type="number" id="wTensionCross" inputmode="numeric" min="30" max="75" />
+                </div>
+              </div>
+              <div class="field">
+                  <label for="wNotes">Notes <span class="opt">(optional)</span></label>
+                  <input type="text" id="wNotes" maxlength="300" />
+              </div>
+              <button type="submit" class="primary" id="walkInSubmit">Add to the queue</button>
+              <div class="msg" id="walkInMsg"></div>
+            </form>
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <div class="queue-head">
+          <h2>Stringing queue</h2>
+          <div class="stats" id="queueStats"></div>
         </div>
         <div class="orders" id="staffOrders"></div>
       </div>
 
       <div class="card">
-        <h2>Past orders</h2>
-        <p class="order-line" style="margin:-8px 0 12px;">
-          Every racket anyone has finished, newest first.
-        </p>
+        <h2>Finished</h2>
+        <p class="card-lede">Every racket anyone has finished, newest first.</p>
         <div class="field" style="margin-bottom:12px;">
-          <input type="search" id="pastSearch" placeholder="Search by member, number, racket or string" />
+          <input type="search" id="pastSearch" placeholder="Search by player, number, racket or string" />
         </div>
         <div class="orders" id="staffPastOrders"></div>
       </div>
 
       <div class="card">
-        <details class="adder" id="memberAdder">
-          <summary>Add a member</summary>
+        <details class="adder quiet" id="memberAdder">
+          <summary>Add a player</summary>
           <div class="body">
-            <p class="order-line" style="margin-bottom:12px;">
-              Members can sign in and order without being added — this is for
+            <p class="card-lede" style="margin-top:0;">
+              Players can sign in and order without being added. This is for
               getting someone's name right before their first visit.
             </p>
             <div class="grid2">
               <div class="field">
                 <label for="newMemberName">Full name</label>
-                <input type="text" id="newMemberName" maxlength="60" placeholder="Jordan Vega" />
+                <input type="text" id="newMemberName" maxlength="60" />
               </div>
               <div class="field">
-                <label for="newMemberNo">Member number</label>
-                <input type="text" id="newMemberNo" maxlength="20" placeholder="1042" />
+                <label for="newMemberNo">Member number <span class="opt">(optional)</span></label>
+                <input type="text" id="newMemberNo" maxlength="20" />
               </div>
             </div>
             <div class="field">
               <label for="newMemberPhone">Phone</label>
-              <input type="tel" id="newMemberPhone" maxlength="20" placeholder="(555) 123-4567" />
+              <input type="tel" id="newMemberPhone" maxlength="20" />
             </div>
-            <button type="button" class="primary" id="addMemberBtn">Add member</button>
+            <button type="button" class="primary" id="addMemberBtn">Add player</button>
             <div class="msg" id="addMemberMsg"></div>
           </div>
         </details>
       </div>
     </section>
+
+    <datalist id="commonStrings">
+      <option value="Luxilon ALU Power 16L"></option>
+      <option value="Babolat RPM Blast 17"></option>
+      <option value="Solinco Hyper-G 16L"></option>
+      <option value="Wilson NXT 16"></option>
+      <option value="Head Lynx Tour 17"></option>
+      <option value="Tecnifibre X-One Biphase 16"></option>
+      <option value="Natural gut 16"></option>
+    </datalist>
+    <datalist id="commonRackets">
+      <option value="Wilson Blade 98"></option>
+      <option value="Wilson Pro Staff 97"></option>
+      <option value="Wilson Clash 100"></option>
+      <option value="Babolat Pure Drive"></option>
+      <option value="Babolat Pure Aero"></option>
+      <option value="Head Speed MP"></option>
+      <option value="Head Radical MP"></option>
+      <option value="Yonex EZONE 100"></option>
+      <option value="Yonex VCORE 98"></option>
+    </datalist>
+    <datalist id="memberNames"></datalist>
   </div>
 
   <!-- ============ LOGIN ============ -->
   <div class="login" id="loginScreen">
     <div class="login-card">
-      <h1>Sign in</h1>
-      <p class="sub" id="loginSub">We'll text you a code.</p>
+      <div class="brand">
+        <div>
+          <p class="club-name">Los Altos Golf &amp; Country Club</p>
+          <p class="brand-name">Racket Stringing</p>
+        </div>
+      </div>
+      <h1 id="loginTitle">Log in</h1>
+      <p class="sub" id="loginSub">Use your mobile number and password.</p>
       <div class="msg err" id="loginError"></div>
 
-      <form id="phoneStep" novalidate>
+      <form id="loginStep" novalidate>
         <div class="field">
-          <label for="loginPhone">Phone number</label>
-          <input type="tel" id="loginPhone" autocomplete="tel" maxlength="20" placeholder="(555) 123-4567" />
+          <label for="loginPhone">Mobile number</label>
+          <input type="tel" id="loginPhone" autocomplete="username" maxlength="20" />
         </div>
-        <button type="submit" class="primary" id="phoneNext">Next</button>
+        <div class="field">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" autocomplete="current-password" maxlength="100" />
+        </div>
+        <button type="submit" class="primary" id="loginSubmit">Log in</button>
+        <div class="login-links">
+          <button type="button" class="login-back" id="toSignup">Create an account</button>
+          <button type="button" class="login-back" id="toForgot">Forgot password?</button>
+        </div>
+      </form>
+
+      <form id="signupStep" novalidate hidden>
+        <div class="field">
+          <label for="suName">Full name</label>
+          <input type="text" id="suName" autocomplete="name" maxlength="60" />
+        </div>
+        <div class="field">
+          <label for="suPhone">Mobile number</label>
+          <input type="tel" id="suPhone" autocomplete="tel" maxlength="20" />
+        </div>
+        <div class="field">
+          <label for="suPassword">Password <span class="opt">(at least 8 characters)</span></label>
+          <input type="password" id="suPassword" autocomplete="new-password" maxlength="100" />
+        </div>
+        <button type="submit" class="primary" id="signupSubmit">Create account</button>
+        <p class="login-hint">We'll text a code to confirm the number is yours.</p>
+        <button type="button" class="login-back" id="signupBack">I already have an account</button>
+      </form>
+
+      <form id="forgotStep" novalidate hidden>
+        <div class="field">
+          <label for="fpPhone">Mobile number</label>
+          <input type="tel" id="fpPhone" autocomplete="tel" maxlength="20" />
+        </div>
+        <button type="submit" class="primary" id="forgotSubmit">Text me a code</button>
+        <button type="button" class="login-back" id="forgotBack">Back to log in</button>
       </form>
 
       <form id="codeStep" novalidate hidden>
         <div class="field">
           <label for="loginCode">6-digit code</label>
-          <input type="text" id="loginCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" />
+          <input type="text" id="loginCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" />
         </div>
         <button type="submit" class="primary" id="codeVerify">Verify</button>
-        <button type="button" class="login-back" id="codeBack">Use a different number</button>
+        <button type="button" class="login-back" id="codeBack">Start over</button>
+      </form>
+
+      <form id="newPassStep" novalidate hidden>
+        <div class="field">
+          <label for="npPassword">New password <span class="opt">(at least 8 characters)</span></label>
+          <input type="password" id="npPassword" autocomplete="new-password" maxlength="100" />
+        </div>
+        <button type="submit" class="primary" id="newPassSubmit">Save password</button>
       </form>
 
       <form id="nameStep" novalidate hidden>
         <div class="field">
           <label for="loginName">Full name</label>
-          <input type="text" id="loginName" autocomplete="name" maxlength="60" placeholder="Jordan Vega" />
-        </div>
-        <div class="field">
-          <label for="loginMemberNo">Member number</label>
-          <input type="text" id="loginMemberNo" maxlength="20" placeholder="1042" />
+          <input type="text" id="loginName" autocomplete="name" maxlength="60" />
         </div>
         <button type="submit" class="primary" id="nameSave">Continue</button>
       </form>
 
-      <p class="login-note">Anyone at the club can sign in and request a stringing. Stringers see the full queue.</p>
+      <p class="login-note">Players sign in to request a stringing and follow its status. Coaches see the full queue.</p>
       <p class="login-build" id="loginBuild"></p>
       <div id="recaptchaContainer"></div>
     </div>
@@ -456,12 +745,22 @@
     // Shown on the login screen. Phones sit on cached copies for a long time,
     // and knowing which build a device is actually running has settled more
     // than one "that fix didn't work" already.
-    const BUILD = "2026-08-22a";
+    const BUILD = "2026-09-24e";
 
+    // The stored values predate these labels and are kept so existing orders
+    // don't need migrating; what people read is the right-hand side.
     const STATUS_LABEL = {
-      requested: "Waiting",
+      requested: "Not started",
       in_progress: "In progress",
-      finished: "Ready for pickup"
+      finished: "Finished"
+    };
+    const STATUS_ORDER = ["requested", "in_progress", "finished"];
+    // Who strings rackets, for the "Strung by" picker.
+    const STRINGERS = ["Byron", "Alena"];
+    const openPanels = new Set();   // order ids whose "What went on it" is unfolded
+    const GRIP_LABEL = {
+      overgrip: "New overgrip",
+      replacement: "New replacement grip"
     };
     // The two windows a racket can be dropped off in.
     const SLOTS = [
@@ -478,11 +777,8 @@
     let members = {};            // phone -> { name }
     let ordersSub = null;
     let membersSub = null;
-    let staffSub = null;
-    let staffRoster = [];        // [{ phone, name }] — stringers, staff-only
     let confirmationResult = null;
     let recaptcha = null;
-    let staffFilter = "active";
     let view = "member";
 
     const $ = id => document.getElementById(id);
@@ -533,71 +829,111 @@
     }
 
     // ---------- rendering ----------
+    // A card is built to be scanned, not read. The three things a stringer
+    // needs at the machine (string, tension, grip) sit in their own boxes in
+    // large type; everything else is a single short line underneath.
+    function specBox(label, value, sub, cls) {
+      const box = el("div", "spec" + (cls ? " " + cls : ""));
+      box.appendChild(el("div", "spec-label", label));
+      box.appendChild(el("div", "spec-value", value));
+      if (sub) box.appendChild(el("div", "spec-sub", sub));
+      return box;
+    }
+
     function orderCard(o, forStaff) {
-      const card = el("div", "order");
+      const done = o.status === "finished";
+      const card = el("div", "order " + o.status + (forStaff ? " staff" : ""));
 
+      // Coaches look for the person; players already know who they are and
+      // look for the racket.
       const top = el("div", "order-top");
-      top.appendChild(el("span", "order-racket", o.racket || "Racket"));
-      top.appendChild(el("span", "badge " + o.status, STATUS_LABEL[o.status] || o.status));
-      card.appendChild(top);
-
+      const title = el("div", "order-title");
       if (forStaff) {
-        const who = el("div", "order-line");
-        const b = el("b", null, o.memberName || "Member");
-        who.appendChild(b);
-        const tail = [o.memberNumber ? "#" + o.memberNumber : "", prettyPhone(o.memberPhone)]
-          .filter(Boolean).join(" · ");
-        if (tail) who.appendChild(document.createTextNode(" · " + tail));
-        card.appendChild(who);
-      }
-
-      // What they asked for, and — once it's done — what actually went in.
-      // They aren't always the same: a stringer may swap a string that's out
-      // of stock or adjust a tension, and the log has to say what's on the
-      // racket, not what was hoped for.
-      const asked = [o.stringName, tensionText(o.tension, o.tensionCross)].filter(Boolean).join(" · ");
-      if (o.status === "finished") {
-        const strung = [o.actualString || o.stringName,
-                        tensionText(o.actualTension || o.tension,
-                                    o.actualTensionCross != null ? o.actualTensionCross : o.tensionCross)]
-                       .filter(Boolean).join(" · ");
-        const line = el("div", "order-line");
-        line.appendChild(el("b", null, "Strung with "));
-        line.appendChild(document.createTextNode(strung || "—"));
-        card.appendChild(line);
-        if (strung !== asked && asked) {
-          card.appendChild(el("div", "order-line", "Asked for " + asked));
-        }
+        const name = el("div", "order-who", o.memberName || "Player");
+        if (o.memberNumber) name.appendChild(el("span", "order-no", "#" + o.memberNumber));
+        title.appendChild(name);
+        title.appendChild(el("div", "order-racket-sub", o.racket || "Racket"));
       } else {
-        card.appendChild(el("div", "order-line", asked || "No string specified"));
+        title.appendChild(el("div", "order-who", o.racket || "Racket"));
       }
-
-      if (o.dropOffDate) {
-        card.appendChild(el("div", "order-line",
-          "Dropping off " + fmtDate(o.dropOffDate) +
-          (o.dropOffSlot ? " · " + slotLabel(o.dropOffSlot) : "")));
-      }
-
-      if (o.status === "finished" && o.finishedAt) {
-        card.appendChild(el("div", "order-line",
-          "Strung by " + (o.strungByName || "staff") + " · " + fmtWhen(o.finishedAt)));
-        if (o.chargedByName) {
-          card.appendChild(el("div", "order-line", "Charged by " + o.chargedByName));
-        }
-      } else if (o.status === "in_progress" && o.startedByName) {
-        card.appendChild(el("div", "order-line", "Started by " + o.startedByName));
+      top.appendChild(title);
+      const badge = el("span", "badge " + o.status, STATUS_LABEL[o.status] || o.status);
+      if (forStaff && o.memberPhone) {
+        const right = el("div", "order-right");
+        right.appendChild(el("div", "order-phone", prettyPhone(o.memberPhone)));
+        right.appendChild(badge);
+        top.appendChild(right);
       } else {
-        card.appendChild(el("div", "order-line", "Requested " + fmtWhen(o.createdAt)));
+        top.appendChild(badge);
+      }
+      card.appendChild(top);
+      // "Where's my racket" is the question a player opens this to answer.
+      if (!forStaff && !done) card.appendChild(statusSteps(o.status));
+
+      // What went in once it's done, since a stringer may have swapped an
+      // out-of-stock string or moved a tension; what was asked for until then.
+      const str = done ? (o.actualString || o.stringName) : o.stringName;
+      const mains = done ? (o.actualTension || o.tension) : o.tension;
+      const cross = done ? (o.actualTensionCross != null ? o.actualTensionCross : o.tensionCross) : o.tensionCross;
+      const specs = el("div", "specs");
+      specs.appendChild(specBox("String", str || "—", null, "wide"));
+      // Two boxes, even when they match, so nobody has to work out which
+      // number is which at the machine.
+      specs.appendChild(specBox("Mains", mains ? String(mains) : "—", mains ? "lbs" : null));
+      const crossShown = cross || mains;
+      specs.appendChild(specBox("Crosses", crossShown ? String(crossShown) : "—", crossShown ? "lbs" : null));
+      const grip = GRIP_LABEL[o.grip];
+      const gripShort = { overgrip: "Overgrip", replacement: "Replacement" }[o.grip];
+      specs.appendChild(specBox("Grip", gripShort || "No change",
+        gripShort ? "new grip on" : null));
+      card.appendChild(specs);
+
+      if (done) {
+        const asked = [o.stringName, tensionText(o.tension, o.tensionCross)].filter(Boolean).join(" · ");
+        const got = [str, tensionText(mains, cross)].filter(Boolean).join(" · ");
+        if (asked && asked !== got) card.appendChild(el("div", "order-diff", "Asked for " + asked));
       }
 
-      if (o.notes) card.appendChild(el("div", "order-note", o.notes));
+      if (o.notes) {
+        const note = el("div", "order-note" + (forStaff ? " staff" : ""));
+        note.appendChild(el("b", null, "Note  "));
+        note.appendChild(document.createTextNode(o.notes));
+        card.appendChild(note);
+      }
+
+      // One line of logistics, as chips so it's still skimmable.
+      const meta = el("div", "chips");
+      if (!done) {
+        if (!o.inShop && o.dropOffDate) meta.appendChild(el("span", "chip plain",
+          "Drop-off " + fmtDate(o.dropOffDate) + (o.dropOffSlot ? ", " + slotLabel(o.dropOffSlot) : "")));
+      }
+      if (forStaff) {
+        if (done && o.strungByName) meta.appendChild(el("span", "chip plain",
+          "Strung by " + o.strungByName + (o.finishedAt ? ", " + fmtDate(ymd(new Date(o.finishedAt))) : "")));
+        if (done && o.notifyError) meta.appendChild(el("span", "chip urgent", "Text didn't send: " + o.notifyError));
+        else if (done && o.notifiedAt) meta.appendChild(el("span", "chip", "Player texted"));
+      } else if (done && o.finishedAt) {
+        meta.appendChild(el("span", "chip plain", "Finished " + fmtDate(ymd(new Date(o.finishedAt)))));
+      } else if (o.status === "requested" && o.createdAt) {
+        meta.appendChild(el("span", "chip plain", "Requested " + fmtDate(ymd(new Date(o.createdAt)))));
+      }
+      if (meta.children.length) card.appendChild(meta);
+
 
       // The stringer fills these in as they work, so the details are already
       // right when they press finish rather than being reconstructed after.
       let panel = null;
       if (forStaff && o.status === "in_progress") {
-        panel = el("div", "finish-panel");
-        panel.appendChild(el("div", "finish-title", "What went on it"));
+        // Folded away by default: most rackets go on exactly as asked, so the
+        // corrections only come out when something changed. Kept open across
+        // redraws once a coach opens it.
+        panel = el("details", "finish-panel");
+        panel.open = openPanels.has(o.id);
+        panel.addEventListener("toggle", () => {
+          if (panel.open) openPanels.add(o.id); else openPanels.delete(o.id);
+        });
+        const summary = el("summary", "finish-title", "What went on it (change if different)");
+        panel.appendChild(summary);
         const row = el("div", "finish-row");
         const sIn = el("input");
         sIn.type = "text"; sIn.placeholder = "String"; sIn.value = o.actualString || o.stringName || "";
@@ -607,24 +943,27 @@
         const cIn = el("input");
         cIn.type = "number"; cIn.placeholder = "Crosses";
         cIn.value = o.actualTensionCross != null ? o.actualTensionCross
-                  : (o.tensionCross != null ? o.tensionCross : "");
+                  : (o.tensionCross != null ? o.tensionCross : (o.tension || ""));
         row.appendChild(sIn); row.appendChild(tIn); row.appendChild(cIn);
         panel.appendChild(row);
+        card.appendChild(panel);
 
-        const chargeRow = el("div", "finish-row");
-        const chargeLabel = el("span", "finish-label", "Charged by");
+        // Picked every time rather than defaulted, so a racket is never
+        // credited to whoever happened to be logged in.
+        const byRow = el("div", "finish-row strung-row");
+        const byLabel = el("span", "finish-label", "Strung by");
         const sel = el("select");
-        const names = staffNames();
-        for (const n of names) {
+        for (const n of ["", ...STRINGERS]) {
           const opt = document.createElement("option");
-          opt.value = n; opt.textContent = n;
-          if (n === (o.chargedByName || (currentUser && currentUser.name))) opt.selected = true;
+          opt.value = n; opt.textContent = n || "Choose…";
+          if (n && n === o.strungByName) opt.selected = true;
           sel.appendChild(opt);
         }
-        chargeRow.appendChild(chargeLabel); chargeRow.appendChild(sel);
-        panel.appendChild(chargeRow);
-        card.appendChild(panel);
-        panel._fields = { sIn, tIn, cIn, sel };
+        byRow.appendChild(byLabel); byRow.appendChild(sel);
+        card.appendChild(byRow);
+        const err = el("div", "msg err");
+        card.appendChild(err);
+        panel._fields = { sIn, tIn, cIn, sel, err };
       }
 
       const actions = el("div", "order-actions");
@@ -634,26 +973,43 @@
           b.addEventListener("click", () => setStatus(o, "in_progress"));
           actions.appendChild(b);
         } else if (o.status === "in_progress") {
-          const b = el("button", "secondary go", "Mark finished");
+          const b = el("button", "secondary clay", "Mark finished & text player");
           b.addEventListener("click", () => finishOrder(o, panel._fields));
           actions.appendChild(b);
-          const back = el("button", "secondary", "Back to waiting");
+          const back = el("button", "secondary", "Back to not started");
           back.addEventListener("click", () => setStatus(o, "requested"));
           actions.appendChild(back);
         } else if (o.status === "finished") {
           const back = el("button", "secondary", "Reopen");
-          back.title = "The member has already been texted that it's ready";
+          back.title = "The player has already been texted that it's ready";
           back.addEventListener("click", () => setStatus(o, "in_progress"));
           actions.appendChild(back);
         }
-      } else if (o.status === "requested") {
-        const cancel = el("button", "secondary warn", "Cancel request");
-        cancel.addEventListener("click", () => cancelOrder(o));
-        actions.appendChild(cancel);
+      }
+      // For entries made by mistake. Players can't pull a racket that's
+      // already on the bench; coaches can remove anything.
+      if (forStaff || o.status !== "in_progress") {
+        const del = el("button", "secondary warn", "Delete");
+        del.addEventListener("click", () => deleteOrder(o, forStaff));
+        actions.appendChild(del);
       }
       if (actions.children.length) card.appendChild(actions);
 
       return card;
+    }
+
+    function statusSteps(status) {
+      const list = el("ol", "steps");
+      list.setAttribute("aria-label", "Status: " + (STATUS_LABEL[status] || status));
+      const at = STATUS_ORDER.indexOf(status);
+      STATUS_ORDER.forEach((s, i) => {
+        const li = el("li", null, STATUS_LABEL[s]);
+        if (i <= at) li.classList.add("done");
+        if (i === at) li.classList.add("now");
+        if (i === at && i === STATUS_ORDER.length - 1) li.classList.add("last");
+        list.appendChild(li);
+      });
+      return list;
     }
 
     function renderMine() {
@@ -690,24 +1046,34 @@
       return (a.createdAt || 0) - (b.createdAt || 0);
     }
 
+    // Two piles, in the order they get worked: what's on the machine, then
+    // what's waiting (oldest first). There are no deadlines: players are told
+    // nothing about timing, just texted when it's done. A count per pile answers "how much have
+    // I got today" before anyone reads a card.
     function renderStaff() {
       const wrap = $("staffOrders");
       wrap.innerHTML = "";
-      const live = orders.filter(o => o.status !== "finished").filter(o =>
-        staffFilter === "active" ? true : o.status === staffFilter
-      ).sort(sortForList);
+      const live = orders.filter(o => o.status !== "finished").sort(sortForList);
+      const bench = live.filter(o => o.status === "in_progress");
+      const waiting = live.filter(o => o.status === "requested");
 
-      $("staffFilters").querySelectorAll("button").forEach(b =>
-        b.classList.toggle("active", b.dataset.filter === staffFilter));
+      const stats = $("queueStats");
+      stats.innerHTML = "";
+      [["Not started", waiting.length, ""], ["In progress", bench.length, "clay"]].forEach(([label, n, cls]) => {
+        const pill = el("span", "stat" + (cls ? " " + cls : ""));
+        pill.appendChild(el("b", "stat-n", String(n)));
+        pill.appendChild(document.createTextNode(" " + label));
+        stats.appendChild(pill);
+      });
 
       if (!live.length) {
         wrap.appendChild(el("div", "empty", "Nothing in the queue."));
       } else {
-        const head = el("div", "order-line count",
-          live.length + (live.length === 1 ? " racket" : " rackets"));
-        head.style.marginBottom = "10px";
-        wrap.appendChild(head);
-        for (const o of live) wrap.appendChild(orderCard(o, true));
+        for (const [label, list] of [["In progress", bench], ["Not started", waiting]]) {
+          if (!list.length) continue;
+          wrap.appendChild(el("div", "section-title", label + " · " + list.length));
+          for (const o of list) wrap.appendChild(orderCard(o, true));
+        }
       }
 
       renderStaffPast();
@@ -723,7 +1089,7 @@
       const past = orders
         .filter(o => o.status === "finished")
         .filter(o => !q || [o.memberName, o.memberNumber, o.racket, o.stringName,
-                            o.actualString, o.strungByName, o.chargedByName]
+                            o.actualString, o.strungByName]
                             .some(v => (v || "").toString().toLowerCase().includes(q)))
         .sort((a, b) => (b.finishedAt || 0) - (a.finishedAt || 0));
 
@@ -767,10 +1133,11 @@
       if (!racket) { msg.textContent = "Which racket is it?"; return; }
       if (!stringName) { msg.textContent = "Which string should we use?"; return; }
       if (!tension || tension < 30 || tension > 75) {
-        msg.textContent = "Enter a tension between 30 and 75 lbs."; return;
+        msg.textContent = "Enter the mains tension, between 30 and 75 lbs."; return;
       }
-      if (cross && (cross < 30 || cross > 75)) {
-        msg.textContent = "Cross tension has to be between 30 and 75 lbs too."; return;
+      // Asked for even when it matches the mains, so nobody's guessing.
+      if (!cross || cross < 30 || cross > 75) {
+        msg.textContent = "Enter the crosses tension too, between 30 and 75 lbs (even if it's the same as the mains)."; return;
       }
       if (!dropOff) { msg.textContent = "Pick the day you'll drop it off."; return; }
 
@@ -782,16 +1149,18 @@
         memberNumber: currentUser.memberNumber || "",
         racket, stringName,
         tension,
-        tensionCross: cross || null,
+        tensionCross: cross,
         dropOffDate: dropOff,
         dropOffSlot: $("dropOffSlot").value,
+        inShop: false,
+        grip: $("grip").value,
+        enteredByName: null,
         notes: $("notes").value.trim(),
         status: "requested",
         createdAt: Date.now(),
         startedAt: null, startedByName: null,
         finishedAt: null, strungByPhone: null, strungByName: null,
         actualString: null, actualTension: null, actualTensionCross: null,
-        chargedByName: null,
         notifiedAt: null
       };
 
@@ -811,16 +1180,122 @@
       }
     }
 
+    // For the racket a player hands straight to a coach, or one left in the
+    // shop without an order. The player doesn't need to have signed in: the
+    // order is filed under their number, so it shows up in their list the
+    // first time they do, and the text goes to that number either way.
+    async function submitWalkIn(e) {
+      e.preventDefault();
+      const msg = $("walkInMsg");
+      msg.className = "msg err";
+      const phone = toE164($("wPhone").value);
+      const name = $("wName").value.trim();
+      const memberNumber = $("wMemberNo").value.trim();
+      const racket = $("wRacket").value.trim();
+      const stringName = $("wString").value.trim();
+      const tension = parseInt($("wTension").value, 10);
+      const cross = parseInt($("wTensionCross").value, 10);
+
+      if (!phone) { msg.textContent = "Enter the player's mobile number so they get the text."; return; }
+      if (!name) { msg.textContent = "Whose racket is it?"; return; }
+      if (!racket) { msg.textContent = "Which racket is it?"; return; }
+      if (!stringName) { msg.textContent = "Which string is going in?"; return; }
+      if (!tension || tension < 30 || tension > 75) {
+        msg.textContent = "Enter the mains tension, between 30 and 75 lbs."; return;
+      }
+      // Asked for even when it matches the mains, so nobody's guessing.
+      if (!cross || cross < 30 || cross > 75) {
+        msg.textContent = "Enter the crosses tension too, between 30 and 75 lbs (even if it's the same as the mains)."; return;
+      }
+
+      const id = newId("s");
+      const order = {
+        id,
+        memberPhone: phone,
+        memberName: name,
+        memberNumber,
+        racket, stringName,
+        tension,
+        tensionCross: cross,
+        dropOffDate: ymd(new Date()),
+        dropOffSlot: null,
+        inShop: true,
+        grip: $("wGrip").value,
+        enteredByName: currentUser.name,
+        notes: $("wNotes").value.trim(),
+        status: "requested",
+        createdAt: Date.now(),
+        startedAt: null, startedByName: null,
+        finishedAt: null, strungByPhone: null, strungByName: null,
+        actualString: null, actualTension: null, actualTensionCross: null,
+        notifiedAt: null
+      };
+
+      $("walkInSubmit").disabled = true;
+      try {
+        await db.collection(ORDERS).doc(id).set(order);
+        // Remember who this is, so their name is already right when they sign
+        // in and the next coach can fill them in from the number.
+        if (!members[phone]) {
+          await db.collection(MEMBERS).doc(phone).set(
+            { name, memberNumber, addedByStaff: true, updatedAt: Date.now() }, { merge: true })
+            .catch(err => console.error("walk-in member", err));
+        }
+        msg.className = "msg ok";
+        msg.textContent = name + "'s " + racket + " is in the queue.";
+        $("walkInForm").reset();
+      } catch (err) {
+        console.error("submitWalkIn", err);
+        msg.className = "msg err";
+        msg.textContent = "Couldn't add that just now. Check your connection and try again.";
+      } finally {
+        $("walkInSubmit").disabled = false;
+      }
+    }
+
+    // Typing a number a player is already known by fills in the rest.
+    function fillWalkInFromPhone() {
+      const phone = toE164($("wPhone").value);
+      const m = phone && members[phone];
+      if (!m) return;
+      if (!$("wName").value.trim()) $("wName").value = m.name || "";
+      if (!$("wMemberNo").value.trim()) $("wMemberNo").value = m.memberNumber || "";
+    }
+    // And picking a known name fills in the number.
+    function fillWalkInFromName() {
+      const name = $("wName").value.trim().toLowerCase();
+      if (!name) return;
+      const hit = Object.entries(members).find(([, m]) => (m.name || "").toLowerCase() === name);
+      if (!hit) return;
+      if (!$("wPhone").value.trim()) $("wPhone").value = prettyPhone(hit[0]);
+      if (!$("wMemberNo").value.trim()) $("wMemberNo").value = hit[1].memberNumber || "";
+    }
+    function fillMemberNames() {
+      const list = $("memberNames");
+      list.innerHTML = "";
+      Object.values(members).map(m => m.name).filter(Boolean).sort().forEach(n => {
+        const opt = document.createElement("option");
+        opt.value = n;
+        list.appendChild(opt);
+      });
+    }
+
     async function finishOrder(order, fields) {
+      if (!fields.sel.value) { fields.err.textContent = "Choose who strung it first."; fields.sel.focus(); return; }
+      fields.err.textContent = "";
+      // This is the one button that reaches outside the app: the player gets
+      // a text the moment it's pressed, and a text can't be taken back.
+      const first = (order.memberName || "the player").split(" ")[0];
+      if (!confirm("Mark " + (order.racket || "this racket") + " finished and text " + first +
+                   " at " + prettyPhone(order.memberPhone) + " that it's ready?")) return;
       const patch = {
         status: "finished",
         finishedAt: Date.now(),
-        strungByPhone: currentUser.phone,
-        strungByName: currentUser.name,
+        strungByPhone: null,
+        strungByName: fields.sel.value,
         actualString: (fields.sIn.value || "").trim() || order.stringName || "",
         actualTension: parseInt(fields.tIn.value, 10) || order.tension || null,
-        actualTensionCross: parseInt(fields.cIn.value, 10) || null,
-        chargedByName: fields.sel.value || currentUser.name
+        actualTensionCross: parseInt(fields.cIn.value, 10) || null
       };
       try {
         await db.collection(ORDERS).doc(order.id).update(patch);
@@ -847,7 +1322,6 @@
         patch.finishedAt = null;
         patch.strungByPhone = null;
         patch.strungByName = null;
-        patch.chargedByName = null;
         patch.notifiedAt = null;
       }
       try {
@@ -858,12 +1332,16 @@
       }
     }
 
-    async function cancelOrder(order) {
-      if (order.status !== "requested") return;
+    async function deleteOrder(order, forStaff) {
+      if (!forStaff && order.status === "in_progress") return;
+      const what = order.racket || "this racket";
+      const whose = forStaff && order.memberName ? " for " + order.memberName : "";
+      if (!confirm("Delete " + what + whose + "? This can't be undone.")) return;
       try {
         await db.collection(ORDERS).doc(order.id).delete();
       } catch (err) {
-        console.error("cancelOrder", err);
+        console.error("deleteOrder", err);
+        alert("Couldn't delete that racket. Check your connection and try again.");
       }
     }
 
@@ -874,7 +1352,6 @@
       const memberNumber = $("newMemberNo").value.trim();
       const phone = toE164($("newMemberPhone").value);
       if (!name) { msg.textContent = "Give them a full name."; return; }
-      if (!memberNumber) { msg.textContent = "Give them a member number."; return; }
       if (!phone) { msg.textContent = "That doesn't look like a phone number."; return; }
       try {
         await db.collection(MEMBERS).doc(phone).set(
@@ -908,30 +1385,17 @@
         membersSub = db.collection(MEMBERS).onSnapshot(snap => {
           members = {};
           snap.docs.forEach(d => { members[d.id] = d.data(); });
+          fillMemberNames();
         }, err => console.error("members listener", err));
-        staffSub = db.collection(STAFF).onSnapshot(snap => {
-          staffRoster = snap.docs.map(d => ({ phone: d.id, name: (d.data() || {}).name || d.id }));
-          render();
-        }, err => console.error("staff listener", err));
       }
     }
     function stopData() {
       if (ordersSub) { ordersSub(); ordersSub = null; }
       if (membersSub) { membersSub(); membersSub = null; }
-      if (staffSub) { staffSub(); staffSub = null; }
       orders = [];
       members = {};
-      staffRoster = [];
     }
 
-    // Whoever is signed in always appears, so the picker works before the
-    // roster has arrived and on the first racket of a fresh install.
-    function staffNames() {
-      const names = staffRoster.map(s => s.name).filter(Boolean);
-      const me = currentUser && currentUser.name;
-      if (me && !names.includes(me)) names.unshift(me);
-      return names.length ? names.sort() : (me ? [me] : []);
-    }
 
     function setDefaultDropOff() {
       const t = new Date();
@@ -1014,69 +1478,60 @@
 
     function showLogin(checking) {
       $("session").classList.remove("show");
+      $("roleTag").hidden = true;
       $("viewSwitch").classList.remove("show");
       $("memberView").hidden = true;
       $("staffView").hidden = true;
       $("loginScreen").classList.add("show");
-      showPhoneStep();
-      $("phoneNext").disabled = Boolean(checking);
-      $("phoneNext").textContent = checking ? "Checking sign-in…" : "Next";
+      showStep("loginStep", "Log in", "Use your mobile number and password.");
+      $("loginSubmit").disabled = Boolean(checking);
+      $("loginSubmit").textContent = checking ? "Checking sign-in…" : "Log in";
     }
     function showApp() {
       loginError("");
       $("loginScreen").classList.remove("show");
       $("sessionName").textContent = currentUser.name;
       $("session").classList.add("show");
-      $("tagline").textContent = isStaff ? "LAGCC · stringing room" : "LAGCC";
+      $("roleTag").hidden = !isStaff;
+      // Coaches already see "Coaches" in the header; the line is for players.
+      $("pageSub").textContent = "Request a stringing and check its status.";
+      $("pageSub").hidden = isStaff;
       render();
     }
     function loginError(text) {
       $("loginError").textContent = text || "";
     }
-    function showPhoneStep() {
-      confirmationResult = null;
-      $("codeStep").hidden = true;
-      $("nameStep").hidden = true;
-      $("phoneStep").hidden = false;
-      $("loginCode").value = "";
-    }
-    function showCodeStep() {
-      $("phoneStep").hidden = true;
-      $("nameStep").hidden = true;
-      $("codeStep").hidden = false;
-      $("loginCode").focus();
+    const LOGIN_STEPS = ["loginStep", "signupStep", "forgotStep", "codeStep", "newPassStep", "nameStep"];
+    function showStep(id, title, sub) {
+      LOGIN_STEPS.forEach(s => { $(s).hidden = s !== id; });
+      if (title) $("loginTitle").textContent = title;
+      if (sub != null) $("loginSub").textContent = sub;
     }
     // Asked once, the first time somebody signs in without a name already on
     // record. Without it their rackets reach the bench labelled with a phone
     // number, which tells whoever is stringing nothing.
     function showNameStep(name, memberNumber) {
       $("loginScreen").classList.add("show");
-      $("phoneStep").hidden = true;
-      $("codeStep").hidden = true;
-      $("nameStep").hidden = false;
-      $("loginSub").textContent = "What should we put on your rackets?";
+      showStep("nameStep", "Your details", "What should we put on your rackets?");
       $("loginName").value = name || "";
-      $("loginMemberNo").value = memberNumber || "";
-      (name ? $("loginMemberNo") : $("loginName")).focus();
+      $("loginName").focus();
     }
 
     async function saveName(e) {
       if (e) e.preventDefault();
       const name = $("loginName").value.trim();
-      const memberNumber = $("loginMemberNo").value.trim();
       if (!name) { loginError("Enter your full name so we know whose racket it is."); return; }
-      if (!memberNumber) { loginError("Enter your member number."); return; }
       if (!auth || !auth.currentUser) { loginError("Sign in again to set your name."); return; }
       const phone = auth.currentUser.phoneNumber;
       $("nameSave").disabled = true;
       try {
         await db.collection(MEMBERS).doc(phone).set(
-          { name, memberNumber, addedByStaff: false, updatedAt: Date.now() }, { merge: true });
+          { name, addedByStaff: false, updatedAt: Date.now() }, { merge: true });
         loginError("");
         // Orders already placed carry the details they were placed under, so
         // bring those along rather than leaving stale ones in the queue.
-        if (currentUser) { currentUser.name = name; currentUser.memberNumber = memberNumber; }
-        await relabelMyOrders(phone, name, memberNumber);
+        if (currentUser) currentUser.name = name;
+        await relabelMyOrders(phone, name);
         await handleAuth(auth.currentUser);
       } catch (err) {
         console.error("saveName", err);
@@ -1086,11 +1541,10 @@
       }
     }
 
-    async function relabelMyOrders(phone, name, memberNumber) {
-      const mine = orders.filter(o => o.memberPhone === phone &&
-        (o.memberName !== name || o.memberNumber !== memberNumber));
+    async function relabelMyOrders(phone, name) {
+      const mine = orders.filter(o => o.memberPhone === phone && o.memberName !== name);
       for (const o of mine) {
-        try { await db.collection(ORDERS).doc(o.id).update({ memberName: name, memberNumber }); }
+        try { await db.collection(ORDERS).doc(o.id).update({ memberName: name }); }
         catch (err) { console.error("relabel order", err); }
       }
     }
@@ -1125,7 +1579,7 @@
       endSession();
       noteSessionEnd("credential-gone");
       $("loginPhone").value = prettyPhone(saved.phone);
-      loginError("Your browser cleared this site's saved sign-in. Nobody logged you out — your number's filled in, a new code brings you back.");
+      loginError("Your browser cleared this site's saved sign-in. Nobody logged you out — your number's filled in, just enter your password.");
     }
 
     function clearRecheck() {
@@ -1160,6 +1614,9 @@
     }
 
     async function handleAuth(user) {
+      // Mid-way through making an account or resetting a password; the flow
+      // calls back in here itself once it has finished.
+      if (flow) return;
       const gen = ++authGeneration;
       clearRecheck();
       if (!user) { handleAuthGone(); return; }
@@ -1206,7 +1663,7 @@
       // already added. Ask before letting them order, so their rackets don't
       // arrive labelled with a phone number. Stringers are identified by the
       // staff list and don't carry a member number.
-      if (!name || (!isStaff && !memberNumber)) { showNameStep(name, memberNumber); return; }
+      if (!name) { showNameStep(name, memberNumber); return; }
 
       currentUser = { name, phone, memberNumber };
       remember(currentUser, isStaff);
@@ -1217,7 +1674,28 @@
     }
 
     // ---------- sign-in ----------
+    // Players log in with their mobile number and a password. Firebase has no
+    // "phone + password" sign-in, so each account is one Firebase user with
+    // two ways in: the phone number itself (proved by a texted code, once, when
+    // the account is made or the password is reset) and an email/password
+    // login whose "email" is made from that number. Nobody ever sees or gets
+    // mail at that address; it's just the key the password hangs on. Because
+    // the phone number stays on the account, the token still carries it, and
+    // the Firestore rules keep working exactly as they did.
+    const PASSWORD_DOMAIN = "phone.racket-stringing-log.web.app";
+    const MIN_PASSWORD = 8;
+    function passwordEmail(phone) {
+      return phone.replace(/\D/g, "") + "@" + PASSWORD_DOMAIN;
+    }
+
+    // Set while an account is being made or a password reset: signing in with
+    // the texted code fires onAuthStateChanged before the password and name
+    // have been saved, and handleAuth must wait for those rather than asking
+    // for a name the person has just typed.
+    let flow = null;             // { kind: "signup" | "reset", phone, name, memberNumber, password }
+
     function getRecaptcha() {
+      if (DEMO) return null;
       if (!recaptcha) {
         recaptcha = new firebase.auth.RecaptchaVerifier("recaptchaContainer", { size: "invisible" });
       }
@@ -1230,25 +1708,77 @@
         if (window.grecaptcha) window.grecaptcha.reset(id);
       } catch (e) { console.error("recaptcha reset", e); }
     }
+    function busy(btn, text) {
+      btn.dataset.label = btn.dataset.label || btn.textContent;
+      btn.disabled = Boolean(text);
+      btn.textContent = text || btn.dataset.label;
+    }
 
-    async function sendCode(raw) {
-      const phone = toE164(raw);
-      if (!phone) {
-        loginError("That doesn't look like a phone number. Try a 10-digit US number.");
-        return;
-      }
+    async function logIn(e) {
+      e.preventDefault();
+      const phone = toE164($("loginPhone").value);
+      const password = $("loginPassword").value;
+      if (!phone) { loginError("Enter your mobile number, e.g. (555) 123-4567."); return; }
+      if (!password) { loginError("Enter your password."); return; }
       loginError("");
-      $("phoneNext").disabled = true;
-      $("phoneNext").textContent = "Sending…";
+      busy($("loginSubmit"), "Logging in…");
+      try {
+        await auth.signInWithEmailAndPassword(passwordEmail(phone), password);
+        // handleAuth takes it from here, via onAuthStateChanged.
+      } catch (err) {
+        console.error("logIn", err);
+        const c = err && err.code;
+        if (c === "auth/invalid-credential" || c === "auth/wrong-password" ||
+            c === "auth/user-not-found" || c === "auth/invalid-login-credentials" ||
+            c === "auth/invalid-email") {
+          loginError("That number and password don't match. New here? Create an account. Forgot it? Reset it with a text.");
+        } else if (c === "auth/too-many-requests") {
+          loginError("Too many tries for this number. Wait a few minutes, or reset your password.");
+        } else if (c === "auth/operation-not-allowed") {
+          loginError("Password log-in isn't switched on for this project. Firebase → Authentication → Sign-in method → Email/Password → Enable.");
+        } else {
+          loginError("Couldn't log in — Firebase said: " + (c || (err && err.message) || "no reason given") +
+            ". Check your connection and try again.");
+        }
+      } finally {
+        busy($("loginSubmit"));
+      }
+    }
+
+    async function startSignup(e) {
+      e.preventDefault();
+      const name = $("suName").value.trim();
+      const phone = toE164($("suPhone").value);
+      const memberNumber = "";   // players sign up with name, number and password only
+      const password = $("suPassword").value;
+      if (!name) { loginError("Enter your full name so we know whose racket it is."); return; }
+      if (!phone) { loginError("Enter your mobile number, e.g. (555) 123-4567."); return; }
+      if (password.length < MIN_PASSWORD) { loginError("Use at least " + MIN_PASSWORD + " characters for your password."); return; }
+      flow = { kind: "signup", phone, name, memberNumber, password };
+      await sendCode(phone, $("signupSubmit"));
+    }
+
+    async function startReset(e) {
+      e.preventDefault();
+      const phone = toE164($("fpPhone").value);
+      if (!phone) { loginError("Enter your mobile number, e.g. (555) 123-4567."); return; }
+      flow = { kind: "reset", phone };
+      await sendCode(phone, $("forgotSubmit"));
+    }
+
+    async function sendCode(phone, btn) {
+      loginError("");
+      busy(btn, "Sending…");
       try {
         confirmationResult = await auth.signInWithPhoneNumber(phone, getRecaptcha());
-        $("loginSub").textContent = "Code sent to " + prettyPhone(phone) + ".";
-        showCodeStep();
+        showStep("codeStep", "Enter the code", "We texted a code to " + prettyPhone(phone) + ".");
+        $("loginCode").focus();
       } catch (e) {
         console.error("sendCode", e);
+        flow = null;
         await resetRecaptcha();
         if (e.code === "auth/too-many-requests") {
-          loginError("Too many sign-in attempts for this number. Firebase pauses new codes for a while — it lifts on its own, usually within an hour.");
+          loginError("Too many codes for this number. Firebase pauses new ones for a while — it lifts on its own, usually within an hour.");
         } else if (e.code === "auth/invalid-phone-number") {
           loginError("Firebase didn't accept that number. Check the digits.");
         } else if (e.code === "auth/unauthorized-domain" || e.code === "auth/captcha-check-failed") {
@@ -1266,30 +1796,112 @@
             ". Tell whoever set this up.");
         }
       } finally {
-        $("phoneNext").disabled = false;
-        $("phoneNext").textContent = "Next";
+        busy(btn);
       }
     }
 
-    async function verifyCode(raw) {
-      const code = (raw || "").replace(/\D/g, "");
-      if (!confirmationResult) { showPhoneStep(); return; }
+    async function verifyCode(e) {
+      e.preventDefault();
+      const code = ($("loginCode").value || "").replace(/\D/g, "");
+      if (!confirmationResult || !flow) { cancelFlow(); return; }
       if (code.length !== 6) { loginError("Enter the 6-digit code."); return; }
       loginError("");
-      $("codeVerify").disabled = true;
-      $("codeVerify").textContent = "Verifying…";
+      busy($("codeVerify"), "Verifying…");
+      let user;
       try {
-        await confirmationResult.confirm(code);
-        // handleAuth takes it from here, via onAuthStateChanged.
-      } catch (e) {
-        console.error("verifyCode", e);
-        loginError(e.code === "auth/invalid-verification-code"
+        user = (await confirmationResult.confirm(code)).user;
+      } catch (err) {
+        console.error("verifyCode", err);
+        loginError(err.code === "auth/invalid-verification-code"
           ? "That code didn't match. Check the digits and try again."
           : "Couldn't verify that code. Try again.");
-      } finally {
-        $("codeVerify").disabled = false;
-        $("codeVerify").textContent = "Verify";
+        busy($("codeVerify"));
+        return;
       }
+      busy($("codeVerify"));
+      $("loginCode").value = "";
+
+      if (flow.kind === "reset") {
+        showStep("newPassStep", "Choose a new password", "For " + prettyPhone(flow.phone) + ".");
+        $("npPassword").focus();
+        return;
+      }
+      try {
+        await setPassword(user, flow.phone, flow.password);
+        await db.collection(MEMBERS).doc(user.phoneNumber).set(
+          { name: flow.name, memberNumber: flow.memberNumber, addedByStaff: false, updatedAt: Date.now() },
+          { merge: true });
+        finishFlow(user);
+      } catch (err) {
+        // The number is confirmed and they're signed in; only the password
+        // (or the name) didn't stick. Let them set it here rather than
+        // starting again and being texted a second code.
+        console.error("finish signup", err);
+        flow = { ...flow, kind: "reset" };
+        showStep("newPassStep", "Choose a password", "Your number is confirmed. Pick a password to finish.");
+        loginError(passwordProblem(err));
+      }
+    }
+
+    async function saveNewPassword(e) {
+      e.preventDefault();
+      const password = $("npPassword").value;
+      const user = auth && auth.currentUser;
+      if (!user || !flow) { cancelFlow(); return; }
+      if (password.length < MIN_PASSWORD) { loginError("Use at least " + MIN_PASSWORD + " characters for your password."); return; }
+      loginError("");
+      busy($("newPassSubmit"), "Saving…");
+      try {
+        await setPassword(user, flow.phone, password);
+        if (flow.name) {
+          await db.collection(MEMBERS).doc(user.phoneNumber).set(
+            { name: flow.name, memberNumber: flow.memberNumber || "", addedByStaff: false, updatedAt: Date.now() },
+            { merge: true });
+        }
+        $("npPassword").value = "";
+        finishFlow(user);
+      } catch (err) {
+        console.error("saveNewPassword", err);
+        loginError(passwordProblem(err));
+      } finally {
+        busy($("newPassSubmit"));
+      }
+    }
+
+    // An account made before passwords existed has only the phone number, so
+    // its first password is attached rather than changed.
+    async function setPassword(user, phone, password) {
+      const hasPassword = (user.providerData || []).some(p => p && p.providerId === "password");
+      if (hasPassword) {
+        await user.updatePassword(password);
+      } else {
+        await user.linkWithCredential(
+          firebase.auth.EmailAuthProvider.credential(passwordEmail(phone), password));
+      }
+    }
+    function passwordProblem(err) {
+      const c = err && err.code;
+      if (c === "auth/weak-password") return "That password is too easy to guess. Try a longer one.";
+      if (c === "auth/operation-not-allowed") {
+        return "Password log-in isn't switched on for this project. Firebase → Authentication → Sign-in method → Email/Password → Enable.";
+      }
+      return "Couldn't save the password — Firebase said: " + (c || (err && err.message) || "no reason given") + ".";
+    }
+
+    function finishFlow(user) {
+      flow = null;
+      confirmationResult = null;
+      $("suPassword").value = "";
+      handleAuth(user);
+    }
+    // Backing out part-way. If the code was already accepted they're signed
+    // in, so carry on into the app rather than leaving them on a dead form.
+    function cancelFlow() {
+      flow = null;
+      confirmationResult = null;
+      loginError("");
+      if (auth && auth.currentUser) { handleAuth(auth.currentUser); return; }
+      showStep("loginStep", "Log in", "Use your mobile number and password.");
     }
 
     function logout() {
@@ -1336,9 +1948,27 @@
       }
     }
 
-    $("phoneStep").addEventListener("submit", e => { e.preventDefault(); sendCode($("loginPhone").value); });
-    $("codeStep").addEventListener("submit", e => { e.preventDefault(); verifyCode($("loginCode").value); });
-    $("codeBack").addEventListener("click", () => { showPhoneStep(); loginError(""); $("loginPhone").focus(); });
+    $("loginStep").addEventListener("submit", logIn);
+    $("signupStep").addEventListener("submit", startSignup);
+    $("forgotStep").addEventListener("submit", startReset);
+    $("codeStep").addEventListener("submit", verifyCode);
+    $("newPassStep").addEventListener("submit", saveNewPassword);
+    $("codeBack").addEventListener("click", cancelFlow);
+    const toLogin = () => { loginError(""); showStep("loginStep", "Log in", "Use your mobile number and password."); };
+    $("signupBack").addEventListener("click", toLogin);
+    $("forgotBack").addEventListener("click", toLogin);
+    $("toSignup").addEventListener("click", () => {
+      loginError("");
+      if (!$("suPhone").value) $("suPhone").value = $("loginPhone").value;
+      showStep("signupStep", "Create an account", "You'll log in with your number and this password.");
+      $("suName").focus();
+    });
+    $("toForgot").addEventListener("click", () => {
+      loginError("");
+      if (!$("fpPhone").value) $("fpPhone").value = $("loginPhone").value;
+      showStep("forgotStep", "Reset your password", "We'll text a code to the number on your account.");
+      $("fpPhone").focus();
+    });
     $("logoutBtn").addEventListener("click", logout);
     $("nameStep").addEventListener("submit", saveName);
     $("sessionName").addEventListener("click", () => {
@@ -1348,13 +1978,10 @@
     });
     $("orderForm").addEventListener("submit", submitOrder);
     $("addMemberBtn").addEventListener("click", addMember);
+    $("walkInForm").addEventListener("submit", submitWalkIn);
+    $("wPhone").addEventListener("change", fillWalkInFromPhone);
+    $("wName").addEventListener("change", fillWalkInFromName);
     $("pastSearch").addEventListener("input", renderStaffPast);
-    $("staffFilters").addEventListener("click", e => {
-      const b = e.target.closest("button");
-      if (!b) return;
-      staffFilter = b.dataset.filter;
-      renderStaff();
-    });
     $("viewSwitch").addEventListener("click", e => {
       const b = e.target.closest("button");
       if (!b) return;
@@ -1384,8 +2011,8 @@
       const now = Date.now(), hr = 3600000, day = 24 * hr;
       return {
         stringing_staff: {
-          [DEMO_STAFF]: { name: "Anjali" },
-          "+15550000003": { name: "Lou" }
+          [DEMO_STAFF]: { name: "Byron" },
+          "+15550000003": { name: "Alena" }
         },
         stringing_members: {
           [DEMO_MEMBER]: { name: "Jordan Vega", memberNumber: "1042" },
@@ -1397,21 +2024,23 @@
                 memberNumber: "1042",
                 racket: "Wilson Blade 98", stringName: "Luxilon ALU Power 16L",
                 tension: 54, tensionCross: 52, dropOffDate: ymd(new Date(now + day)),
-                dropOffSlot: "am",
+                dropOffSlot: "am", grip: "replacement", inShop: false,
+                enteredByName: null,
                 notes: "grommet looks cracked near 3 o'clock", status: "requested",
                 createdAt: now - 2 * hr, startedAt: null, startedByName: null,
                 finishedAt: null, strungByName: null, actualString: null,
-                actualTension: null, actualTensionCross: null, chargedByName: null,
+                actualTension: null, actualTensionCross: null,
                 notifiedAt: null },
           d2: { id: "d2", memberPhone: "+15550000004", memberName: "Priya Raman",
                 memberNumber: "0871",
                 racket: "Babolat Pure Aero", stringName: "RPM Blast 17",
                 tension: 52, tensionCross: null, dropOffDate: ymd(new Date(now)),
-                dropOffSlot: "pm",
-                notes: "", status: "in_progress",
-                createdAt: now - 26 * hr, startedAt: now - hr, startedByName: "Anjali",
+                dropOffSlot: null, grip: "overgrip",
+                inShop: true, enteredByName: "Alena",
+                notes: "white overgrip please", status: "in_progress",
+                createdAt: now - 26 * hr, startedAt: now - hr, startedByName: "Byron",
                 finishedAt: null, strungByName: null, actualString: null,
-                actualTension: null, actualTensionCross: null, chargedByName: null,
+                actualTension: null, actualTensionCross: null,
                 notifiedAt: null },
           // Strung with something other than what was asked for, which is the
           // case the log exists to record.
@@ -1422,9 +2051,9 @@
                 dropOffSlot: "am",
                 notes: "", status: "finished",
                 createdAt: now - 3 * day, startedAt: now - 2 * day,
-                startedByName: "Lou", finishedAt: now - 2 * day + hr,
-                strungByName: "Lou", actualString: "Solinco Tour Bite 16L",
-                actualTension: 50, actualTensionCross: 48, chargedByName: "Anjali",
+                startedByName: "Byron", finishedAt: now - 2 * day + hr,
+                strungByName: "Byron", actualString: "Solinco Tour Bite 16L",
+                actualTension: 50, actualTensionCross: 48, 
                 notifiedAt: now - 2 * day + hr },
           d4: { id: "d4", memberPhone: DEMO_MEMBER, memberName: "Jordan Vega",
                 memberNumber: "1042",
@@ -1433,9 +2062,9 @@
                 dropOffSlot: "pm",
                 notes: "", status: "finished",
                 createdAt: now - 21 * day, startedAt: now - 20 * day,
-                startedByName: "Anjali", finishedAt: now - 20 * day + 2 * hr,
-                strungByName: "Anjali", actualString: "Head Lynx Tour 17",
-                actualTension: 55, actualTensionCross: null, chargedByName: "Lou",
+                startedByName: "Byron", finishedAt: now - 20 * day + 2 * hr,
+                strungByName: "Alena", actualString: "Head Lynx Tour 17",
+                actualTension: 55, actualTensionCross: null, 
                 notifiedAt: now - 20 * day + 2 * hr }
         }
       };
@@ -1472,9 +2101,23 @@
       };
       db = { collection: col => colRef(col) };
 
+      // A stand-in for Firebase Auth good enough to walk through the sign-in
+      // screens: any password logs in, any 6 digits pass as the texted code.
+      const demoUser = phone => ({
+        phoneNumber: phone, getIdToken: async () => "demo",
+        providerData: [{ providerId: "phone" }, { providerId: "password" }],
+        updatePassword: async () => {}
+      });
+      const demoAuth = user => ({
+        currentUser: user,
+        signOut: async () => {},
+        signInWithEmailAndPassword: async email => asPerson("+" + email.split("@")[0]),
+        signInWithPhoneNumber: async phone => ({
+          confirm: async () => { const u = demoUser(phone); auth.currentUser = u; return { user: u }; }
+        })
+      });
       const asPerson = async phone => {
-        auth = { currentUser: { phoneNumber: phone, getIdToken: async () => "demo" },
-                 signOut: async () => {} };
+        auth = demoAuth(demoUser(phone));
         currentUser = null; isStaff = false;
         authGoneSettled = true;      // no real session to lose in here
         clearAuthGone();
@@ -1488,42 +2131,19 @@
       $("demoMember").addEventListener("click", () => asPerson(DEMO_MEMBER));
       $("demoStaff").addEventListener("click", () => asPerson(DEMO_STAFF));
       $("demoReset").addEventListener("click", () => { store = demoSeed(); fire(); });
-      // Log out has nothing to sign out of here; put them back as a member.
+      // Log out goes to the sign-in screen, where any number and password
+      // get back in (the sample player is (555) 000-0002, the coach -0001).
       $("logoutBtn").addEventListener("click", e => {
         e.stopImmediatePropagation();
-        asPerson(DEMO_MEMBER);
+        currentUser = null; isStaff = false; stopData();
+        auth = demoAuth(null);
+        showLogin(false);
+        $("loginBuild").textContent = "Demo: any password works, and any 6 digits pass as the code. " +
+          "Sample player (555) 000-0002, coach (555) 000-0001.";
       }, true);
 
       asPerson(DEMO_STAFF);
     }
-
-    // ---------- pierce ----------
-    // Fills the screen on every button press and gets out of the way again.
-    // Capture phase, so it still fires for the handlers that stop propagation,
-    // and the overlay takes no pointer events, so the button underneath does
-    // its actual job while this happens over the top.
-    (function pierce() {
-      const overlay = $("pierceOverlay");
-      if (!overlay) return;
-      overlay.textContent = "";
-      for (let i = 0; i < 160; i++) {
-        const word = document.createElement("span");
-        word.textContent = "pierce";
-        // A little variation so it reads as a wall of it rather than a grid.
-        word.style.opacity = (0.55 + Math.random() * 0.45).toFixed(2);
-        word.style.transform = "rotate(" + (Math.random() * 6 - 3).toFixed(1) + "deg)";
-        overlay.appendChild(word);
-      }
-      let timer = null;
-      document.addEventListener("click", e => {
-        if (!e.target.closest("button")) return;
-        overlay.classList.remove("go");
-        void overlay.offsetWidth;          // restart the animation mid-flight
-        overlay.classList.add("go");
-        if (timer) clearTimeout(timer);
-        timer = setTimeout(() => overlay.classList.remove("go"), 850);
-      }, true);
-    })();
 
     updateBuildStamp();
     setDefaultDropOff();

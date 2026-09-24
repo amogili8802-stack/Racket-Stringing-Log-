@@ -63,11 +63,10 @@ service cloud.firestore {
     // collection, or write to it from the app.
     match /stringing_staff/{phone} {
       allow get: if signedIn() && callerPhone() == phone;
-      // Staff may read the roster, which is what fills the "charged by" picker
-      // with real names instead of a text box that collects typos. Members
-      // still can't see who the stringers are, and nobody writes it from the
-      // app — the list stays the console's to keep.
-      allow list: if isStaff();
+      // Nobody lists the roster or writes it from the app — the list stays
+      // the console's to keep. (Who strung a racket is picked from a fixed
+      // list in the page, not from here.)
+      allow list: if false;
       allow write: if false;
     }
 
@@ -88,11 +87,14 @@ service cloud.firestore {
       // what keeps one member from listing another's rackets.
       allow read: if isStaff() || (signedIn() && resource.data.memberPhone == callerPhone());
 
-      // An order can only be placed in your own name, and only as a request —
-      // nobody hands themselves a finished racket, or one strung by someone
-      // else.
+      // A member can only place an order in their own name. Staff can enter
+      // one for anyone — the racket a player hands over at the desk — which
+      // is what the "Enter a racket" form does. Either way it starts as a
+      // request: nobody creates a racket that's already finished, since
+      // finishing is what sends the text.
       allow create: if signedIn()
-        && request.resource.data.memberPhone == callerPhone()
+        && (isStaff() || request.resource.data.memberPhone == callerPhone())
+        && request.resource.data.memberPhone is string
         && request.resource.data.status == "requested"
         && request.resource.data.strungByName == null
         && request.resource.data.finishedAt == null;
@@ -108,12 +110,13 @@ service cloud.firestore {
             && request.resource.data.strungByName == null
             && request.resource.data.finishedAt == null);
 
-      // A member can withdraw a request nobody has started on. Once it's on
-      // the bench it's the stringers' call.
+      // A member can delete their own racket (a request made by mistake, or
+      // an old finished one) except while it's being strung; then it's the
+      // stringers' call. Staff can delete anything.
       allow delete: if isStaff()
         || (signedIn()
             && resource.data.memberPhone == callerPhone()
-            && resource.data.status == "requested");
+            && resource.data.status != "in_progress");
     }
 
     // Anything not named above stays closed.
