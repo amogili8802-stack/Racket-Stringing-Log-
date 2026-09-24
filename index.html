@@ -6,7 +6,7 @@
   <title>Racket Stringing · LAGCC</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,650;1,9..144,400&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,650;1,9..144,400&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     /* Cream and green, like the clinic sign-up site, but deliberately not the
        same: a dark green masthead instead of a white one, a clay accent
@@ -53,18 +53,16 @@
       display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
     }
     .brand { display: flex; align-items: center; gap: 12px; }
-    .brand svg { flex: none; }
+    /* The club's name, in the script it's written in on the club's own site. */
+    .club-name {
+      margin: 0 0 2px;
+      font-family: "Great Vibes", "Snell Roundhand", "Apple Chancery", cursive;
+      font-size: 34px; font-weight: 400; line-height: 1.1; word-spacing: .08em;
+    }
     .brand-name {
       margin: 0;
       font-family: var(--serif); font-weight: 650;
-      font-size: 26px; letter-spacing: -.01em; line-height: 1.05;
-    }
-    .brand-kicker {
-      display: block;
-      font-family: Manrope, sans-serif;
-      font-size: 10.5px; font-weight: 800; letter-spacing: .18em;
-      text-transform: uppercase; color: #d9c7a4;
-      margin-bottom: 3px;
+      font-size: 17px; letter-spacing: .01em; line-height: 1.1; color: #d9c7a4;
     }
 
     h1 { margin: 0 0 4px; font-family: var(--serif); font-size: 30px; font-weight: 650; text-align: center; }
@@ -359,7 +357,9 @@
       padding: 30px 30px 24px;
       box-shadow: 0 12px 34px rgba(31,42,36,.10);
     }
-    .login-card .brand { justify-content: center; margin-bottom: 14px; color: var(--green); }
+    .login-card .brand { justify-content: center; text-align: center; margin-bottom: 14px; color: var(--text); }
+    .login-card .club-name { font-size: 30px; }
+    .login-card .brand-name { color: var(--green); }
     .login-card h1 { font-size: 26px; margin-bottom: 4px; }
     .login-note { margin-top: 16px; font-size: 12px; color: var(--muted); text-align: center; line-height: 1.5; }
     .login-build { margin-top: 10px; text-align: center; font-size: 11px; color: var(--muted); opacity: .7; }
@@ -371,7 +371,9 @@
     @media (max-width: 560px) {
       .page { padding: 20px 14px 48px; }
       .masthead-inner { padding: 14px; }
-      .brand-name { font-size: 22px; }
+      .club-name { font-size: 27px; }
+      .login-card .club-name { font-size: 25px; }
+      .brand-name { font-size: 15px; }
       .card { padding: 18px 16px; }
       .grid2, .grid3 { grid-template-columns: 1fr; }
       .order-actions button { flex: 1 1 auto; min-height: 44px; }
@@ -388,13 +390,8 @@
   <header class="masthead">
     <div class="masthead-inner">
       <div class="brand">
-        <svg width="34" height="34" viewBox="0 0 34 34" fill="none" aria-hidden="true">
-          <ellipse cx="14" cy="13" rx="9.5" ry="11" transform="rotate(-35 14 13)" stroke="currentColor" stroke-width="2.2"/>
-          <path d="M8 8.5l12 9M6.5 13l10 7.5M11 5.5l11 8M8.5 18.5l12-9.5M6.8 13.5l10.6-8.3M12 21l9-7" stroke="currentColor" stroke-width="1" opacity=".6"/>
-          <path d="M20.5 20.5l8.5 8.5" stroke="#b4623b" stroke-width="3.4" stroke-linecap="round"/>
-        </svg>
         <div>
-          <span class="brand-kicker" id="tagline">LAGCC</span>
+          <p class="club-name">Los Altos Golf &amp; Country Club</p>
           <p class="brand-name">Racket Stringing</p>
         </div>
       </div>
@@ -618,7 +615,10 @@
   <div class="login" id="loginScreen">
     <div class="login-card">
       <div class="brand">
-        <span class="brand-name">Racket Stringing</span>
+        <div>
+          <p class="club-name">Los Altos Golf &amp; Country Club</p>
+          <p class="brand-name">Racket Stringing</p>
+        </div>
       </div>
       <h1 id="loginTitle">Log in</h1>
       <p class="sub" id="loginSub">Use your mobile number and password.</p>
@@ -1463,7 +1463,6 @@
       $("loginScreen").classList.remove("show");
       $("sessionName").textContent = currentUser.name;
       $("session").classList.add("show");
-      $("tagline").textContent = isStaff ? "LAGCC · Coaches" : "LAGCC · Racket service";
       $("roleTag").hidden = !isStaff;
       // Coaches already see "Coaches" in the header; the line is for players.
       $("pageSub").textContent = "Request a stringing and check its status.";
